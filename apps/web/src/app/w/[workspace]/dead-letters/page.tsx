@@ -12,11 +12,17 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState, ErrorNotice, Skeleton } from "@/components/ui/feedback";
 import { PageBody, PageHeader } from "@/components/ui/page";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatRelative, shortId } from "@/lib/format";
 import { canEdit, useCurrentWorkspace, useDeadLetterActions, useDeadLetters } from "@/lib/queries";
 import type { DeadLetter } from "@/lib/types";
+
+const STATUSES = [
+  ["open", "Open"],
+  ["retried", "Retried"],
+  ["discarded", "Discarded"],
+] as const;
 
 function Letter({
   letter,
@@ -132,38 +138,48 @@ export default function DeadLettersPage() {
         title="Dead letters"
         description="Steps that failed after their last retry. Retry resumes the execution from that step; discard closes the letter."
       />
-      <Tabs value={status} onValueChange={setStatus} className="mb-4">
+      <Tabs value={status} onValueChange={setStatus}>
         <TabsList>
-          <TabsTrigger value="open">Open</TabsTrigger>
-          <TabsTrigger value="retried">Retried</TabsTrigger>
-          <TabsTrigger value="discarded">Discarded</TabsTrigger>
+          {STATUSES.map(([value, label]) => (
+            <TabsTrigger key={value} value={value}>
+              {label}
+            </TabsTrigger>
+          ))}
         </TabsList>
+        {/* One panel per status, so every tab controls an element that exists. */}
+        {STATUSES.map(([value]) => (
+          <TabsContent key={value} value={value}>
+            {value !== status ? null : letters.error ? (
+              <ErrorNotice message={letters.error.message} />
+            ) : !letters.data ? (
+              <Skeleton className="h-64" />
+            ) : letters.data.items.length === 0 ? (
+              <Card>
+                <EmptyState
+                  icon={<Archive />}
+                  title={
+                    status === "open" ? "Nothing in the dead letter queue" : `No ${status} letters`
+                  }
+                  description="When a step runs out of retries and has no error branch, it lands here with its input."
+                />
+              </Card>
+            ) : (
+              <Card className="overflow-hidden">
+                <ol className="divide-border divide-y">
+                  {letters.data.items.map((letter) => (
+                    <Letter
+                      key={letter.id}
+                      letter={letter}
+                      workspace={workspace}
+                      editable={canEdit(current?.role)}
+                    />
+                  ))}
+                </ol>
+              </Card>
+            )}
+          </TabsContent>
+        ))}
       </Tabs>
-      {letters.error ? <ErrorNotice message={letters.error.message} /> : null}
-      {!letters.data ? (
-        <Skeleton className="h-64" />
-      ) : letters.data.items.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={<Archive />}
-            title={status === "open" ? "Nothing in the dead letter queue" : `No ${status} letters`}
-            description="When a step runs out of retries and has no error branch, it lands here with its input."
-          />
-        </Card>
-      ) : (
-        <Card className="overflow-hidden">
-          <ol className="divide-border divide-y">
-            {letters.data.items.map((letter) => (
-              <Letter
-                key={letter.id}
-                letter={letter}
-                workspace={workspace}
-                editable={canEdit(current?.role)}
-              />
-            ))}
-          </ol>
-        </Card>
-      )}
     </PageBody>
   );
 }
