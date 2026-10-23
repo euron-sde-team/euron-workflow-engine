@@ -56,6 +56,8 @@ regexes = [
   '''(tok|sk)_(test|export|other|move)_[A-Za-z0-9_]+''',
   # Placeholders in the guides
   '''wfk_\.\.\.''',
+  # The idempotency key in the README's API example
+  '''nightly-2026-10-23''',
 ]
 paths = [
   '''pnpm-lock\.yaml''',
