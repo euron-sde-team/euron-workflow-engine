@@ -7,7 +7,7 @@ constraint is named the same way on every database.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import DateTime, MetaData, Text, func
@@ -46,5 +46,12 @@ class CreatedMixin:
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
 
+def utcnow() -> datetime:
+    return datetime.now(UTC)
+
+
 class TimestampMixin(CreatedMixin):
-    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+    # Computed in Python on update, so the new value is known without a reload. A
+    # server-side `onupdate=now()` would expire the attribute after every flush, and
+    # reading it later would need lazy I/O, which async sessions refuse.
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=utcnow)

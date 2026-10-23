@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy import ForeignKey, Index, Integer, String, Text, UniqueConstraint, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from workflow_engine.db.base import Base, CreatedMixin, IdMixin, TimestampMixin
+from workflow_engine.db.base import Base, CreatedMixin, IdMixin, TimestampMixin, utcnow
 
 
 class Workflow(IdMixin, TimestampMixin, Base):
@@ -128,4 +128,4 @@ class Variable(Base):
     updated_by: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL")
     )
-    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=utcnow)
