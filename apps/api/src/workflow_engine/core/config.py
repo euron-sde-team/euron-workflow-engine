@@ -40,6 +40,9 @@ class Settings(BaseSettings):
 
     # Postgres: the system of record and the work queue
     database_url: str = "postgresql+asyncpg://wfe:wfe@localhost:5453/wfe"
+    # On AWS the URL carries no password; it is read from this RDS-managed secret for each
+    # new connection, so a password rotation needs no redeploy.
+    database_secret_arn: str | None = None
     database_pool_size: int = Field(default=10, ge=1, le=100)
     database_max_overflow: int = Field(default=10, ge=0, le=100)
     database_echo: bool = False

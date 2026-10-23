@@ -15,6 +15,8 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
 import workflow_engine
+from workflow_engine.core.config import Settings
+from workflow_engine.db.session import create_engine
 
 # Arbitrary, stable 64-bit key: "wfengine" in ASCII.
 MIGRATION_LOCK_KEY = 0x7766656E67696E65
@@ -34,8 +36,12 @@ def _upgrade(connection: Connection, revision: str) -> None:
     command.upgrade(config, revision)
 
 
-async def migrate(database_url: str, revision: str = "head") -> None:
-    engine = create_async_engine(database_url, poolclass=pool.NullPool)
+async def migrate(target: Settings | str, revision: str = "head") -> None:
+    """Upgrade the database of `target` (settings, or a bare URL in tests) to `revision`."""
+    if isinstance(target, str):
+        engine = create_async_engine(target, poolclass=pool.NullPool)
+    else:
+        engine = create_engine(target, application_name="wfe-migrate", pooled=False)
     try:
         async with engine.begin() as conn:
             await conn.execute(

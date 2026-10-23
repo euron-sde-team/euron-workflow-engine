@@ -40,7 +40,7 @@ def migrate() -> None:
     """Apply pending database migrations."""
     from workflow_engine.db.migrate import migrate as run
 
-    asyncio.run(run(get_settings().database_url))
+    asyncio.run(run(get_settings()))
     typer.echo("migrations applied")
 
 

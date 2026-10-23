@@ -55,7 +55,7 @@ async def _announce(
 
 async def run(settings: Settings, *, scheduler_enabled: bool | None = None) -> None:
     if settings.migrate_on_boot:
-        await migrate(settings.database_url)
+        await migrate(settings)
     container = build_container(settings, application_name="wfe-worker")
     wid = worker_id()
     stopping = asyncio.Event()

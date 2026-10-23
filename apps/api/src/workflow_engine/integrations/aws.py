@@ -67,3 +67,7 @@ class AwsClients:
     def kms(self) -> KMSClient:
         client: KMSClient = self._client("kms")
         return client
+
+    def secrets(self) -> Any:
+        """Secrets Manager, used only to read the RDS-managed database password."""
+        return self._client("secretsmanager")

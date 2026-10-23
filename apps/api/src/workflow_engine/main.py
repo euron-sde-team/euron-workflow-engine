@@ -58,7 +58,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         if settings.migrate_on_boot:
-            await migrate(settings.database_url)
+            await migrate(settings)
         container = build_container(settings)
         app.state.container = container
         log.info(
