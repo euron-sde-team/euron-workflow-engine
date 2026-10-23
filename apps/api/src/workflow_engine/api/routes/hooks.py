@@ -9,14 +9,9 @@ from workflow_engine.api.deps import ContainerDep, SessionDep
 from workflow_engine.services.webhooks import WebhookService
 
 router = APIRouter(tags=["webhooks"])
+METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE")
 
 
-@router.api_route(
-    "/hooks/{workspace}/{path:path}",
-    methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-    summary="Start the workflow listening on this path",
-    responses={202: {"description": "Accepted"}, 200: {"description": "Duplicate or finished"}},
-)
 async def receive_webhook(
     workspace: str, path: str, request: Request, container: ContainerDep, session: SessionDep
 ) -> JSONResponse:
@@ -29,3 +24,15 @@ async def receive_webhook(
         body=await request.body(),
     )
     return JSONResponse(response.body, status_code=response.status_code)
+
+
+# One route per method, so every operation in the OpenAPI document has its own id.
+for _method in METHODS:
+    router.add_api_route(
+        "/hooks/{workspace}/{path:path}",
+        receive_webhook,
+        methods=[_method],
+        operation_id=f"receive_webhook_{_method.lower()}",
+        summary="Start the workflow listening on this path",
+        responses={202: {"description": "Accepted"}, 200: {"description": "Duplicate or finished"}},
+    )
