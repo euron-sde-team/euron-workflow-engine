@@ -5,7 +5,7 @@ SHELL := /usr/bin/env bash
 COMPOSE_DIR := deploy/compose
 FLOCI       := docker compose --env-file $(COMPOSE_DIR)/.env -f $(COMPOSE_DIR)/compose.yaml -f $(COMPOSE_DIR)/compose.floci.yaml
 AWS_LOCAL   := docker compose --env-file $(COMPOSE_DIR)/.env -f $(COMPOSE_DIR)/compose.yaml -f $(COMPOSE_DIR)/compose.aws.yaml
-API         := cd apps/api && uv run
+API         := uv --directory apps/api run
 TF_IMAGE    := hashicorp/terraform:1.16.6
 TF_ENVS     := local-floci aws-dev aws-prod
 # Use a local terraform when installed, otherwise the pinned container.
