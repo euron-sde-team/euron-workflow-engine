@@ -50,7 +50,7 @@ function PublishForm({ workspace }: { workspace: string }) {
   }
 
   return (
-    <Card className="self-start">
+    <Card className="order-first self-start lg:order-none">
       <CardHeader>
         <div>
           <CardTitle>Publish an event</CardTitle>
