@@ -459,12 +459,13 @@ Nodes with side effects really perform them; the editor says so before running o
 - Running the draft from the editor stores a `snapshot` version (deduplicated by checksum),
   so every execution references an immutable definition.
 - Export writes `{format: "euron-workflow", format_version: 1, name, description, tags,
-  settings, definition}`; credential ids become `{credential: {name, type}}` references,
-  resolved by name and type on import.
+  settings, definition, credentials, exported_at}`; each credential id becomes
+  `@credential:<name>` and `credentials` lists what the workflow needs by name and type.
+  Import resolves the references by name and type and reports the ones it could not find.
 
 ## Dashboard and caching
 
-`GET /api/v1/workspaces/{ws}/dashboard?window=24h|7d|14d` returns the success rate,
+`GET /api/v1/workspaces/{ws}/dashboard?window=24h|7d|14d|30d` returns the success rate,
 counts by status, a volume series by hour or day in the workspace time zone, the five
 slowest workflows by p95 duration, recent failures, queue depth, live workers (from their
 Redis presence keys) and the next schedules. The response is cached in Redis for 15 s per
