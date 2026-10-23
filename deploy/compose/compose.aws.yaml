@@ -1,0 +1,29 @@
+# -----------------------------------------------------------------------------
+# Overlay: the local containers against REAL AWS resources (from envs/aws-dev, or your
+# own). Credentials come from your AWS profile; resource names from .env.aws.
+#   cp deploy/compose/.env.aws.example deploy/compose/.env.aws   # then edit
+#   make up-aws
+# -----------------------------------------------------------------------------
+x-aws: &aws
+  env_file: [.env.aws]
+  volumes:
+    # The containers run as an unprivileged user whose home is /app.
+    - ${HOME}/.aws:/app/.aws:ro
+
+services:
+  migrate:
+    <<: *aws
+    environment:
+      AWS_PROFILE: ${AWS_PROFILE:-default}
+
+  api:
+    <<: *aws
+    environment:
+      AWS_PROFILE: ${AWS_PROFILE:-default}
+      VAULT_PROVIDER: kms
+
+  worker:
+    <<: *aws
+    environment:
+      AWS_PROFILE: ${AWS_PROFILE:-default}
+      VAULT_PROVIDER: kms
