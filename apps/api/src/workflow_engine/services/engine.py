@@ -39,6 +39,7 @@ from workflow_engine.models import (
     ExecutionStep,
     Workflow,
     WorkflowVersion,
+    Workspace,
 )
 from workflow_engine.models.enums import (
     DeadLetterStatus,
@@ -83,6 +84,11 @@ class StepOutcome:
     finished: datetime
     logs: list[LogLine] = field(default_factory=list)
     secrets: list[str] = field(default_factory=list)
+
+
+def execution_url(web_url: str, workspace: str, execution_id: uuid.UUID) -> str:
+    """Where a person opens an execution in the web app (used in system event payloads)."""
+    return f"{web_url.rstrip('/')}/w/{workspace}/executions/{execution_id}"
 
 
 def redact(value: Any, secrets: Sequence[str]) -> Any:
@@ -667,6 +673,7 @@ class Engine:
         if str(trigger_event).startswith("execution.") or execution.mode == ExecutionMode.TEST:
             return
         workflow = await self.session.get(Workflow, execution.workflow_id)
+        workspace = await self.session.get(Workspace, execution.workspace_id)
         await self.publish_event(
             workspace_id=execution.workspace_id,
             name=name,
@@ -680,7 +687,11 @@ class Engine:
                 "started_at": execution.started_at.isoformat() if execution.started_at else None,
                 "finished_at": execution.finished_at.isoformat() if execution.finished_at else None,
                 "duration_ms": execution.duration_ms,
-                "url": f"{self.c.settings.web_url}/executions/{execution.id}",
+                "url": execution_url(
+                    self.c.settings.web_url,
+                    workspace.slug if workspace else str(execution.workspace_id),
+                    execution.id,
+                ),
             },
             source=EventSource.SYSTEM,
             source_execution_id=execution.id,

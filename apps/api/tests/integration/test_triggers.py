@@ -250,6 +250,9 @@ async def test_workflows_chain_through_events_and_failures_raise_system_events(
         )
     ).json()["items"][0]
     assert consumer["error"]["message"] == "Invoice INV-9 rejected"
+    # The system event links to the failed run in the web app, inside its workspace.
+    link = handled["trigger_payload"]["payload"]["url"]
+    assert link.endswith(f"/w/{owner.workspace}/executions/{consumer['id']}")
     # The handler itself never raises execution.* events, so it cannot loop.
     await asyncio.sleep(0.5)
     again = (
