@@ -26,7 +26,9 @@ def render_config(
             try:
                 rendered[name] = render(raw[name], context, now=now)
             except TemplateError as exc:
-                raise NodeError("template_error", f"{name}: {exc}", details={"field": name}) from exc
+                raise NodeError(
+                    "template_error", f"{name}: {exc}", details={"field": name}
+                ) from exc
     return rendered
 
 
