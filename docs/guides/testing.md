@@ -4,7 +4,7 @@
 | --- | --- | --- | --- |
 | API unit tests | 208 | Nothing: pure functions, fakes for Redis and AWS | `make test` |
 | Web unit tests (Vitest) | 38 | Nothing | `make test` |
-| API integration tests | 55 | Real Postgres, Valkey, the Floci AWS emulator and Mailpit, the real worker and scheduler | `make test-integration` |
+| API integration tests | 56 | Real Postgres, Valkey, the Floci AWS emulator and Mailpit, the real worker and scheduler | `make test-integration` |
 | Browser end-to-end tests (Playwright) | 13 | The full local stack with demo data | `make e2e` |
 | QA crawl (Playwright and axe) | 4 (every page, desktop and mobile) | The full local stack with demo data | `make qa` |
 | Screenshots and tour | 3 | The full local stack with demo data | `make screenshots` |
@@ -54,6 +54,7 @@ What they prove, among others:
   events with filters and wildcards, event chains and failure handlers that cannot loop;
 - a schedule fires exactly once per tick with two schedulers;
 - KMS envelope encryption, and a credential moved to another workspace cannot be opened;
+- every workspace route answers 404 to a non-member, and nothing changes;
 - SES mail arriving in Mailpit, S3 round trips, the SQS allowlist, read-only Postgres;
 - the dashboard aggregates and the whole demo seed.
 

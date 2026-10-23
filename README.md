@@ -128,7 +128,7 @@ an engine that treats every step as durable state.
 | **Engine** | Postgres queue with `SKIP LOCKED`, guarded writes, heartbeats and a reaper, dead-path elimination for branches and merges, per-workflow concurrency limits |
 | **Templates** | 7 working automations: order fulfillment, low-stock report, lead routing, invoice batches, uptime monitor, failure alerts, customer onboarding |
 | **Infrastructure** | 13 Terraform modules, 3 environments (local emulator, AWS dev, AWS prod) |
-| **Tests** | 246 unit (208 API, 38 web), 55 integration, 13 browser end-to-end, plus a QA crawl of every page at two widths |
+| **Tests** | 246 unit (208 API, 38 web), 56 integration, 13 browser end-to-end, plus a QA crawl of every page at two widths |
 | **License** | MIT |
 
 ## 🖼️ Screenshots
@@ -413,7 +413,7 @@ see [SECURITY.md](SECURITY.md).
 | Suite | What it proves | Run |
 | --- | --- | --- |
 | Unit (246: 208 API, 38 web) | Cron and DST rules, expressions, templates, routing through a simulator, validation, backoff, every node with fakes, the outbound guard, config guards, crypto, frontend logic | `make test` |
-| Integration (55) | The real API, worker and scheduler against Postgres, Valkey, Floci and Mailpit: retries, dead letters and resume, timeouts, cancellation, concurrency, 12 racing claimers, exactly-once schedules, signed webhooks, events, KMS sealing, SES, S3, SQS, the demo seed | `make test-integration` |
+| Integration (56) | The real API, worker and scheduler against Postgres, Valkey, Floci and Mailpit: retries, dead letters and resume, timeouts, cancellation, concurrency, 12 racing claimers, exactly-once schedules, signed webhooks, events, KMS sealing, SES, S3, SQS, a non-member sweep of every workspace route, the demo seed | `make test-integration` |
 | Browser (13) | Sign-in, building and publishing on the canvas, templates, a signed webhook with a retry, cancel, dead letters, events, credentials, API keys and the audit log | `make e2e` |
 | QA crawl | Every page at desktop and mobile widths: no console errors, failed requests, broken links or serious accessibility violations | `make qa` |
 | Infrastructure | `terraform validate` (3 environments), tflint, checkov | `make tf-validate tf-lint tf-security` |
