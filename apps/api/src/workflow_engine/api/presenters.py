@@ -8,10 +8,26 @@ from pydantic import ValidationError
 
 from workflow_engine.engine.definition import WorkflowDefinition, checksum
 from workflow_engine.engine.validation import Issue
-from workflow_engine.models import Credential, Workspace
+from workflow_engine.models import (
+    Credential,
+    DeadLetter,
+    Event,
+    Execution,
+    ExecutionStep,
+    Workspace,
+)
 from workflow_engine.nodes.base import NodeType
 from workflow_engine.schemas.catalog import NodeTypeOut, RetryOut
 from workflow_engine.schemas.credentials import CredentialOut
+from workflow_engine.schemas.events import EventOut
+from workflow_engine.schemas.executions import (
+    DeadLetterOut,
+    ExecutionError,
+    ExecutionOut,
+    ExecutionSummaryOut,
+    StepOut,
+    StepSummaryOut,
+)
 from workflow_engine.schemas.workflows import (
     IssueOut,
     LastExecution,
@@ -20,6 +36,7 @@ from workflow_engine.schemas.workflows import (
     WorkflowStatsOut,
     WorkflowSummaryOut,
 )
+from workflow_engine.services.executions import ExecutionDetail
 from workflow_engine.services.triggers import summarize, trigger_nodes, webhook_url
 from workflow_engine.services.workflows import WorkflowView
 
@@ -146,4 +163,95 @@ def credential_out(credential: Credential, used_by: list[str]) -> CredentialOut:
         created_at=credential.created_at,
         updated_at=credential.updated_at,
         last_used_at=credential.last_used_at,
+    )
+
+
+def execution_summary(execution: Execution, workflow_name: str) -> ExecutionSummaryOut:
+    error = execution.error
+    return ExecutionSummaryOut(
+        id=execution.id,
+        workflow_id=execution.workflow_id,
+        workflow_name=workflow_name,
+        version_id=execution.version_id,
+        status=execution.status,
+        mode=execution.mode,
+        trigger_kind=execution.trigger_kind,
+        trigger_node_id=execution.trigger_node_id,
+        created_at=execution.created_at,
+        started_at=execution.started_at,
+        finished_at=execution.finished_at,
+        duration_ms=execution.duration_ms,
+        error=ExecutionError.model_validate(error) if error else None,
+        resume_count=execution.resume_count,
+        retry_of_id=execution.retry_of_id,
+    )
+
+
+def step_summary(step: ExecutionStep) -> StepSummaryOut:
+    waiting = step.status in ("waiting", "queued")
+    return StepSummaryOut(
+        id=step.id,
+        node_id=step.node_id,
+        node_type=step.node_type,
+        node_name=step.node_name,
+        run_index=step.run_index,
+        scope=step.scope,
+        status=step.status,
+        attempt=step.attempt,
+        max_attempts=step.max_attempts,
+        ports=list(step.ports),
+        error=step.error,
+        available_at=step.available_at if waiting else None,
+        started_at=step.started_at,
+        finished_at=step.finished_at,
+        duration_ms=step.duration_ms,
+    )
+
+
+def step_detail(step: ExecutionStep) -> StepOut:
+    return StepOut(
+        **step_summary(step).model_dump(), input=step.input, output=step.output, state=step.state
+    )
+
+
+def execution_detail(detail: ExecutionDetail) -> ExecutionOut:
+    execution = detail.execution
+    return ExecutionOut(
+        **execution_summary(execution, detail.workflow_name).model_dump(),
+        trigger_payload=execution.trigger_payload,
+        output=execution.output,
+        variables=dict((execution.state or {}).get("vars") or {}),
+        version_number=detail.version_number,
+        steps=[step_summary(s) for s in detail.steps],
+        steps_truncated=detail.truncated,
+    )
+
+
+def dead_letter_out(letter: DeadLetter, workflow_name: str) -> DeadLetterOut:
+    return DeadLetterOut(
+        id=letter.id,
+        workflow_id=letter.workflow_id,
+        workflow_name=workflow_name,
+        execution_id=letter.execution_id,
+        step_id=letter.step_id,
+        node_id=letter.node_id,
+        node_name=letter.node_name,
+        error=letter.error,
+        input=letter.input,
+        status=letter.status,
+        created_at=letter.created_at,
+        resolved_at=letter.resolved_at,
+    )
+
+
+def event_out(event: Event) -> EventOut:
+    return EventOut(
+        id=event.id,
+        name=event.name,
+        payload=event.payload,
+        source=event.source,
+        source_execution_id=event.source_execution_id,
+        depth=event.depth,
+        matched=event.matched,
+        created_at=event.created_at,
     )

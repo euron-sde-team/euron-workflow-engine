@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Header, Query, status
 from fastapi.responses import JSONResponse
 
 from workflow_engine.api.deps import ContainerDep, EditorDep, SessionDep, ViewerDep
@@ -17,6 +17,8 @@ from workflow_engine.schemas.workflows import (
     ImportResult,
     IssueOut,
     PublishRequest,
+    RunOut,
+    RunRequest,
     ValidateRequest,
     VersionDetailOut,
     VersionOut,
@@ -26,6 +28,7 @@ from workflow_engine.schemas.workflows import (
     WorkflowUpdate,
 )
 from workflow_engine.services.container import Container
+from workflow_engine.services.executions import ExecutionService
 from workflow_engine.services.workflows import WorkflowService, parse_definition
 
 router = APIRouter(prefix="/api/v1/workspaces/{workspace}/workflows", tags=["workflows"])
@@ -281,3 +284,30 @@ async def delete_workflow(
     workflow_id: uuid.UUID, ctx: EditorDep, container: ContainerDep, session: SessionDep
 ) -> None:
     await WorkflowService(container, session).delete(ctx.id, ctx.principal, workflow_id)
+
+
+@router.post(
+    "/{workflow_id}/run",
+    summary="Run now: the published version, or the draft as a test",
+    status_code=201,
+)
+async def run_workflow(
+    workflow_id: uuid.UUID,
+    body: RunRequest,
+    ctx: EditorDep,
+    container: ContainerDep,
+    session: SessionDep,
+    idempotency_key: Annotated[str | None, Header(max_length=200)] = None,
+) -> RunOut:
+    result = await ExecutionService(container, session).run(
+        ctx.id,
+        ctx.principal,
+        workflow_id,
+        payload=body.payload,
+        use_draft=body.use_draft,
+        trigger_node=body.trigger_node,
+        idempotency_key=idempotency_key,
+    )
+    return RunOut(
+        execution_id=result.execution.id, status=result.execution.status, duplicate=result.duplicate
+    )
