@@ -284,7 +284,8 @@ module "api" {
   container_health_command = local.python_health
 }
 
-# Every worker task stands for the scheduler election (docs/adr/0003); one leads at a time.
+# Every worker task stands for the scheduler election; one leads at a time
+# (docs/architecture/adr/0003-leader-elected-scheduler.md).
 module "worker" {
   source                  = "../service"
   name_prefix             = var.name_prefix

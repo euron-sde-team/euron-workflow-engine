@@ -1,7 +1,7 @@
 # The workflow data bucket: the default target of the S3 get and put nodes
 # (WORKFLOW_DATA_BUCKET), for archives, exports and hand-offs between workflows. Nothing is
 # ever public and nothing is presigned; workflows reach it only through the deployment's
-# task roles, and only buckets on the allowlist (docs/security.md).
+# task roles, and only buckets on the allowlist (docs/architecture/security.md).
 resource "aws_s3_bucket" "data" {
   #checkov:skip=CKV_AWS_144:Cross-region replication is an organisation-level DR decision; enable it per deployment.
   #checkov:skip=CKV_AWS_18:Access logging targets a separate log bucket an operator chooses; CloudTrail data events cover object access (docs/guides/operations.md).

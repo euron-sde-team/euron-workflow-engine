@@ -1,6 +1,6 @@
 # Queues that workflows publish to with the SQS node; only these names are on the
 # allowlist (SQS_ALLOWED_QUEUES). WorkflowEngine never needs SQS for itself: its own work
-# queue is Postgres (docs/adr/0002-postgres-as-the-queue.md).
+# queue is Postgres (docs/architecture/adr/0002-postgres-as-the-queue.md).
 #
 # Every queue gets a dead-letter queue, so a consumer that keeps failing on a message
 # moves it aside after max_receive_count receives instead of retrying it forever. FIFO

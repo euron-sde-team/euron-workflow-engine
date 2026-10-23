@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 # -----------------------------------------------------------------------------
 # API, workers, scheduler, migrations and the operator CLI: one image, three roles
-# (docs/adr/0001-one-image-three-roles.md).
+# (docs/architecture/adr/0001-one-image-three-roles.md).
 #   docker build -f infra/docker/api.Dockerfile -t wfe-api .
 #
 #   api        uvicorn workflow_engine.main:create_app --factory    (default command)

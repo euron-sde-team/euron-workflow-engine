@@ -4,7 +4,7 @@
 # The SAME Terraform modules that provision real AWS (infra/terraform/modules) run here
 # against the emulator: the `terraform` one-shot applies infra/terraform/envs/local-floci
 # before the migrations, the API and the workers start. They then use AWS exactly as they
-# do in production (docs/adr/0008-floci-for-local-aws.md):
+# do in production (docs/architecture/adr/0008-floci-for-local-aws.md):
 #
 #   credentials vault   KMS key alias/wfe-local-vault, envelope encryption per credential
 #   S3 nodes            bucket wfe-local-workflow-data, SSE-KMS (alias/wfe-local)
