@@ -32,13 +32,14 @@ for the big picture; the tables are in the [Data Model](data-model.md).
 apps/api/src/workflow_engine/
 |-- main.py            app factory: middleware, routers, lifespan
 |-- worker.py          worker process: executor loop + scheduler candidate, graceful shutdown
-|-- cli.py             typer CLI (wfe): migrate, users, demo seed, openapi, worker
+|-- runtime/           long-running loops: executor, scheduler, leader election, presence, clock
+|-- cli.py             typer CLI (wfe): migrate, users, demo seed, demo APIs, openapi, worker
 |-- core/              config, logging, errors, request context, security, crypto, rate limits, metrics, ids
 |-- db/                engine, session, declarative base, migrations runner
 |-- models/            SQLAlchemy models, one module per aggregate
 |-- schemas/           Pydantic request and response models
 |-- repositories/      the only code that touches the database
-|-- services/          business rules and transactions (workflows, engine, executions, vault, events, ...)
+|-- services/          business rules and transactions (workflows, engine, steps, sweeps, executions, vault, events, ...)
 |-- engine/            pure core: definitions, graph validation, routing, expressions, templates, cron, backoff
 |-- nodes/             one module per node type: config model, ports, run()
 |-- integrations/      AWS clients (S3, SQS, SES, KMS), guarded HTTP transport, Redis signals

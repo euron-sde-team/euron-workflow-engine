@@ -138,8 +138,8 @@ flowchart TB
 | Component | Code | Runs as | Owns | Never does |
 | --------- | ---- | ------- | ---- | ---------- |
 | API | [`apps/api`](../../apps/api) `main.py` | ECS Fargate service (uvicorn, one process per task) | Authentication, workspaces, workflows and versions, credentials vault, webhook ingress, event bus, starting and controlling executions, test runs of single nodes, dashboard queries | Run workflow steps in the background |
-| Worker | `worker.py` | ECS Fargate service, two or more tasks | Claim steps, render templates, run nodes with timeouts, record results, route to the next steps, heartbeat, cooperative cancellation | Decide schedules (unless it holds the leader lock) |
-| Scheduler | `engine/scheduler.py`, inside every worker | Elected through a Redis lock; one leader at a time | Fire cron and interval triggers, wake waiting steps, reap stale claims, enforce execution deadlines, admit queued executions, prune old executions, publish queue-depth stats | Execute steps |
+| Worker | `worker.py`, `runtime/executor.py` | ECS Fargate service, two or more tasks | Claim steps, render templates, run nodes with timeouts, record results, route to the next steps, heartbeat, cooperative cancellation | Decide schedules (unless it holds the leader lock) |
+| Scheduler | `runtime/scheduler.py` and `services/sweeps.py`, inside every worker | Elected through a Redis lock; one leader at a time | Fire cron and interval triggers, wake waiting steps, reap stale claims, enforce execution deadlines, admit queued executions, prune old executions, publish queue-depth stats | Execute steps |
 | Web app | [`apps/web`](../../apps/web) | ECS Fargate service (Next.js standalone) | Editor canvas, forms, execution views, dashboard, settings | Hold credentials or talk to AWS |
 | Demo APIs | `demo/apis.py` | Compose only (`make up`) | Deterministic HTTP endpoints and a Slack-compatible receiver for the templates and tests | Run in production |
 
@@ -246,14 +246,14 @@ outside `/api` so it can be routed and rate limited separately.
 | Catalog | `GET /node-types`, `GET /credential-types`, `GET /templates` |
 | Workflows | list, create (blank or from a template), get, update, `PUT .../draft`, `POST .../validate`, `.../publish`, `.../activate`, `.../deactivate`, versions and restore, `.../run`, duplicate, export, import, delete |
 | Test runs | `POST /workspaces/{ws}/nodes/test` |
-| Executions | list (filters, cursor), get, steps, logs, `.../cancel`, `.../resume`, `.../retry` |
+| Executions | list (filters, cursor), get, the definition it ran, steps, logs, `.../cancel`, `.../resume`, `.../retry` |
 | Dead letters | list, `.../retry`, `.../discard` |
 | Credentials | list, create, get (metadata only), update (write-only secrets), delete |
 | Events | `POST /workspaces/{ws}/events`, `GET /workspaces/{ws}/events` |
 | Variables | `GET/PUT/DELETE /workspaces/{ws}/variables` |
 | Dashboard | `GET /workspaces/{ws}/dashboard` |
 | API keys | list, create (shown once), revoke |
-| Ingress | `ANY /hooks/{workspace}/{path}`, `POST /hooks/resume/{token}` |
+| Ingress | `ANY /hooks/{workspace}/{path}` |
 | Operations | `GET /livez`, `GET /readyz`, `GET /metrics`, `GET /api/v1/system/info` |
 
 Errors always use one envelope, `{"error": {"code", "message", "request_id", "details?"}}`,
@@ -366,7 +366,7 @@ Full detail: [security.md](security.md) and the [threat model](threat-model.md).
 | ------ | ----- | ---- |
 | Logs | stdout as JSON (structlog), CloudWatch Logs on AWS | Request id on every API line; execution id, step id and node on every worker line |
 | Metrics | `GET /metrics` on the API, `:9100/metrics` on workers | HTTP latency, executions started and finished, step duration and retries by node type, queue depth, leader status, schedule fires, webhook outcomes, vault operations |
-| Health | `GET /livez`, `GET /readyz` (database, Redis, KMS) | ALB target health uses `/readyz` |
+| Health | `GET /livez` (process), `GET /readyz` (database, Redis, KMS) | ALB target health and the container checks use `/livez`, so a dependency outage does not cycle every task; `/readyz` is for operators and dashboards |
 | Execution logs | `GET .../executions/{id}/logs` | Per step: attempts, retries scheduled, HTTP status lines, rows returned |
 | Audit | `GET .../audit` | Every mutation with actor, target and details |
 | Dashboard | Web app | Success rate, volume, slowest workflows, failures, queue, workers, upcoming schedules |
