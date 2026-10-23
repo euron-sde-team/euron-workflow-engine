@@ -20,6 +20,8 @@ type Item = { id: string; name?: string; workflow_name?: string; resume_count?: 
 let frame = 0;
 async function shot(page: Page, name: string): Promise<void> {
   await settle(page);
+  // A clicked tab or button keeps a focus ring; screenshots show the page at rest.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await page.screenshot({ path: path.join(SHOTS, `${name}.png`) });
 }
 async function tourFrame(page: Page, holdMs = 1600): Promise<void> {
@@ -63,17 +65,18 @@ test("dashboard, workflows, editor, executions and operations", async ({ page })
   await shot(page, "03-workflows");
   await tourFrame(page, 2000);
 
-  // The order workflow in the editor, with the retrying HTTP node selected.
+  // The order workflow in the editor: the whole graph first, then the retrying HTTP node.
   await page.goto(`${base}/workflows/${await workflowId(page, "Ship paid orders")}`);
   await expect(page.getByTestId("canvas")).toBeVisible();
-  await page.getByText("Create shipment", { exact: true }).click();
-  await expect(page.getByTestId("inspector")).toBeVisible();
   await page.waitForTimeout(500);
   await shot(page, "04-editor");
-  await tourFrame(page, 2600);
+  await tourFrame(page, 2400);
 
+  await page.getByText("Create shipment", { exact: true }).click();
+  await expect(page.getByTestId("inspector")).toBeVisible();
   await page.getByRole("tab", { name: "Settings" }).click();
   await shot(page, "05-editor-retries");
+  await tourFrame(page, 2400);
 
   await page.goto(`${base}/executions`);
   await expect(page.getByTestId("execution-link").first()).toBeVisible();
@@ -140,7 +143,7 @@ test("dashboard, workflows, editor, executions and operations", async ({ page })
 test("dark theme", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await signIn(page, "owner");
-  await page.goto(`/w/${WORKSPACE}/workflows/${await workflowId(page, "Enrich and route")}`);
+  await page.goto(`/w/${WORKSPACE}/workflows/${await workflowId(page, "Daily low-stock report")}`);
   await expect(page.getByTestId("canvas")).toBeVisible();
   await page.waitForTimeout(600);
   await shot(page, "15-dark-editor");
