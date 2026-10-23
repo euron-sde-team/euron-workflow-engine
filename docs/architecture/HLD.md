@@ -318,7 +318,7 @@ flowchart LR
 
 Differences from AWS are configuration only ([ADR-0008](adr/0008-floci-for-local-aws.md)):
 `AWS_ENDPOINT_URL` points the SDK at Floci, the HTTP node may reach the `demo-apis`
-container (`HTTP_ALLOWED_HOSTS`), and SES mail is relayed to Mailpit.
+container (`OUTBOUND_ALLOWED_HOSTS`), and SES mail is relayed to Mailpit.
 
 ## Scalability
 

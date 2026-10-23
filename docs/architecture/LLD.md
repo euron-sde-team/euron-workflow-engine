@@ -438,7 +438,7 @@ custom network backend: the hostname is resolved, every address is checked again
 blocked ranges (private, loopback, link-local, CGNAT, multicast, reserved, unique-local,
 the metadata address), and the TCP connection is opened to the checked address while TLS
 still verifies the hostname. Redirects go through the same backend. Deployments allow
-specific hosts with `HTTP_ALLOWED_HOSTS` or everything with `HTTP_ALLOW_PRIVATE_NETWORKS`
+specific hosts with `OUTBOUND_ALLOWED_HOSTS` or everything with `OUTBOUND_ALLOW_PRIVATE_NETWORKS`
 (refused in production).
 
 ## Test runs of a single node

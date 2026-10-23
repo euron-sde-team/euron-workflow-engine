@@ -74,9 +74,9 @@ class Settings(BaseSettings):
     s3_allowed_buckets: CsvList = Field(default_factory=list)
     sqs_allowed_queues: CsvList = Field(default_factory=list)
 
-    # Outbound HTTP (HTTP and Slack nodes)
-    http_allow_private_networks: bool = False
-    http_allowed_hosts: CsvList = Field(default_factory=list)
+    # Outbound network policy for the HTTP, Slack and Postgres nodes
+    outbound_allow_private_networks: bool = False
+    outbound_allowed_hosts: CsvList = Field(default_factory=list)
     http_user_agent: str = (
         "EuronWorkflowEngine/0.1 (+https://github.com/euron-sde-team/euron-workflow-engine)"
     )
@@ -112,7 +112,7 @@ class Settings(BaseSettings):
         "cors_origins",
         "s3_allowed_buckets",
         "sqs_allowed_queues",
-        "http_allowed_hosts",
+        "outbound_allowed_hosts",
         mode="before",
     )
     @classmethod
@@ -155,10 +155,10 @@ class Settings(BaseSettings):
             problems.append("VAULT_PROVIDER=kms with KMS_KEY_ID is required")
         if self.aws_endpoint_url:
             problems.append("AWS_ENDPOINT_URL points at an emulator; unset it in production")
-        if self.http_allow_private_networks:
+        if self.outbound_allow_private_networks:
             problems.append(
-                "HTTP_ALLOW_PRIVATE_NETWORKS lets workflows reach the internal network; "
-                "list the hosts you need in HTTP_ALLOWED_HOSTS instead"
+                "OUTBOUND_ALLOW_PRIVATE_NETWORKS lets workflows reach the internal network; "
+                "list the hosts you need in OUTBOUND_ALLOWED_HOSTS instead"
             )
         return problems
 

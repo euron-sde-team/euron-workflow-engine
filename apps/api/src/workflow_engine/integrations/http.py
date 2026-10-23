@@ -109,7 +109,7 @@ class GuardedBackend(httpcore.AsyncNetworkBackend):
                     raise OutboundBlockedError(
                         f"{host} resolves to {address}, a private or reserved address that "
                         "workflows may not reach. An operator can allow it with "
-                        "HTTP_ALLOWED_HOSTS."
+                        "OUTBOUND_ALLOWED_HOSTS."
                     )
         last_error: Exception | None = None
         for address in addresses:
