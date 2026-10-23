@@ -267,7 +267,7 @@ and every response carries `X-Request-Id`.
 flowchart TB
   subgraph vpc["VPC, 2 or 3 availability zones"]
     subgraph pub["Public subnets"]
-      alb["ALB (TLS 1.3, ACM)<br/>/api, /hooks -> api; the rest -> web"]
+      alb["ALB (TLS 1.2+ with 1.3, ACM)<br/>api.domain -> api (incl. /hooks); app.domain -> web"]
       nat["NAT gateway"]
     end
     subgraph priv["Private subnets"]
