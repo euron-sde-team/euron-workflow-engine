@@ -1,0 +1,54 @@
+# Disposable backing services for `make test-integration`: Postgres, Valkey, the Floci AWS
+# emulator and Mailpit, as their own compose project (wfe-test) on the extras ports, so the
+# integration suite never touches the `make up` stack or its data.
+#
+#   scripts/test-deps.sh up | down
+#
+# Host ports: postgres 9135, valkey 9136, floci 9137, mailpit UI 9138 (SMTP stays internal).
+name: wfe-test
+
+services:
+  postgres:
+    image: postgres:16.15-alpine
+    environment:
+      POSTGRES_DB: wfe
+      POSTGRES_USER: wfe
+      POSTGRES_PASSWORD: wfe
+    command: ["postgres", "-c", "fsync=off", "-c", "synchronous_commit=off", "-c", "max_connections=200"]
+    ports:
+      - "127.0.0.1:${WFE_TEST_PG_PORT:-9135}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wfe -d wfe"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: valkey/valkey:8.1-alpine
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:${WFE_TEST_REDIS_PORT:-9136}:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  mailpit:
+    image: axllent/mailpit:v1.27.9
+    ports:
+      - "127.0.0.1:${WFE_TEST_MAILPIT_PORT:-9138}:8025"
+
+  floci:
+    image: floci/floci:2.3.0
+    environment:
+      FLOCI_HOSTNAME: localhost
+      FLOCI_DEFAULT_REGION: us-east-1
+      FLOCI_SERVICES_SES_SMTP_HOST: mailpit
+      FLOCI_SERVICES_SES_SMTP_PORT: "1025"
+    ports:
+      - "127.0.0.1:${WFE_TEST_FLOCI_PORT:-9137}:4566"
+    depends_on:
+      - mailpit
