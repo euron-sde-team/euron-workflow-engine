@@ -11,7 +11,7 @@ import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { useCronPreview } from "@/lib/queries";
 import { defaultFor, fieldTitle, resolveRef, schemaType, unwrapNullable } from "@/lib/schema";
-import { timeZones } from "@/lib/timezones";
+import { timeZoneOptions } from "@/lib/timezones";
 import type { Credential, JsonSchema } from "@/lib/types";
 
 type FormContext = {
@@ -341,7 +341,7 @@ function Field({
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
       >
-        {timeZones().map((zone) => (
+        {timeZoneOptions(textOf(value) || "UTC").map((zone) => (
           <option key={zone} value={zone}>
             {zone}
           </option>

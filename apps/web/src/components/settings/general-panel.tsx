@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FieldHint, Input, Label, NativeSelect, Textarea } from "@/components/ui/input";
 import { useUpdateWorkspace } from "@/lib/queries";
-import { timeZones } from "@/lib/timezones";
+import { timeZoneOptions } from "@/lib/timezones";
 import type { Workspace } from "@/lib/types";
 
 export function GeneralPanel({ workspace, editable }: { workspace: Workspace; editable: boolean }) {
@@ -67,7 +67,7 @@ export function GeneralPanel({ workspace, editable }: { workspace: Workspace; ed
               onChange={(e) => setTimezone(e.target.value)}
               disabled={!editable}
             >
-              {timeZones().map((zone) => (
+              {timeZoneOptions(timezone).map((zone) => (
                 <option key={zone} value={zone}>
                   {zone}
                 </option>
@@ -111,7 +111,7 @@ export function GeneralPanel({ workspace, editable }: { workspace: Workspace; ed
             <Label>Address</Label>
             <FieldHint>
               This workspace lives at <code className="font-mono">/w/{workspace.slug}</code>.
-              Webhooks are served under <code className="font-mono">/hooks/{workspace.slug}/</code>
+              Webhooks are served under <code className="font-mono">/hooks/{workspace.slug}/</code>{" "}
               and API calls accept the slug or the id{" "}
               <code className="font-mono">{workspace.id}</code>.
             </FieldHint>
