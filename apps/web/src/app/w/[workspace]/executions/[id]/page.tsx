@@ -223,34 +223,31 @@ export default function ExecutionPage() {
         </div>
       ) : null}
 
+      <Card className="mb-5 overflow-hidden">
+        <CardHeader className="pb-3">
+          <div>
+            <CardTitle>Graph</CardTitle>
+            <CardDescription>Click a node to see what it received and returned.</CardDescription>
+          </div>
+        </CardHeader>
+        {definition.data && types.data ? (
+          <ExecutionGraph
+            definition={definition.data.definition}
+            types={types.data}
+            steps={steps}
+            runs={runs}
+            selectedNode={selected?.node_id ?? null}
+            onSelectNode={(nodeId) => {
+              const run = runs.get(nodeId);
+              if (run) setSelection(run.focus.id);
+            }}
+          />
+        ) : (
+          <Skeleton className="mx-5 mb-5 h-80" />
+        )}
+      </Card>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_25rem]">
         <div className="min-w-0 space-y-5">
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-3">
-              <div>
-                <CardTitle>Graph</CardTitle>
-                <CardDescription>
-                  Click a node to see what it received and returned.
-                </CardDescription>
-              </div>
-            </CardHeader>
-            {definition.data && types.data ? (
-              <ExecutionGraph
-                definition={definition.data.definition}
-                types={types.data}
-                steps={steps}
-                runs={runs}
-                selectedNode={selected?.node_id ?? null}
-                onSelectNode={(nodeId) => {
-                  const run = runs.get(nodeId);
-                  if (run) setSelection(run.focus.id);
-                }}
-              />
-            ) : (
-              <Skeleton className="mx-5 mb-5 h-80" />
-            )}
-          </Card>
-
           <Card>
             <CardHeader className="pb-3">
               <div>

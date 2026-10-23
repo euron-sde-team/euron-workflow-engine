@@ -35,7 +35,8 @@ export function ExecutionGraph({
     return {
       ...node,
       selected: node.id === selectedNode,
-      style: run && run.status !== "skipped" ? undefined : { opacity: 0.45 },
+      // Nodes the run never reached are drawn dashed and quiet; their text keeps full contrast.
+      className: run && run.status !== "skipped" ? undefined : "wfe-not-run",
       data: { ...node.data, runStatus: run?.status === "skipped" ? undefined : run?.status },
     };
   });
@@ -49,7 +50,7 @@ export function ExecutionGraph({
   });
 
   return (
-    <div className="bg-canvas h-[22rem] rounded-b-xl" data-testid="execution-graph">
+    <div className="bg-canvas h-[26rem] rounded-b-xl" data-testid="execution-graph">
       <ReactFlow<CanvasNode, CanvasEdge>
         nodes={nodes}
         edges={edges}
@@ -61,7 +62,8 @@ export function ExecutionGraph({
         zoomOnScroll={false}
         preventScrolling={false}
         fitView
-        fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
+        // Wide graphs stay legible: below half size the view centres instead of shrinking.
+        fitViewOptions={{ padding: 0.12, maxZoom: 1, minZoom: 0.5 }}
         minZoom={0.2}
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{ type: "smoothstep" }}

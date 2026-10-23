@@ -219,3 +219,10 @@
 .react-flow__edge:hover .react-flow__edge-path {
   stroke: var(--primary);
 }
+
+/* Execution graph: nodes the run never reached (skipped branches, not yet started). */
+.react-flow__node.wfe-not-run > div {
+  border-style: dashed;
+  background: var(--muted);
+  box-shadow: none;
+}
