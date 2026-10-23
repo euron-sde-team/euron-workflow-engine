@@ -38,7 +38,8 @@ function Letter({
   const busy = actions.retry.isPending || actions.discard.isPending;
   return (
     <li data-testid="dead-letter">
-      <div className="flex items-start gap-3 px-5 py-3.5">
+      {/* On narrow screens the actions wrap below the text instead of squeezing it. */}
+      <div className="flex flex-wrap items-start gap-3 px-5 py-3.5">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -48,7 +49,7 @@ function Letter({
         >
           <ChevronRight className={cn("size-4 transition-transform", open && "rotate-90")} />
         </button>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 basis-64">
           <p className="flex flex-wrap items-center gap-x-2 text-[13.5px] font-medium">
             {letter.workflow_name || "Deleted workflow"}
             <span className="text-muted-foreground font-normal">at</span>
@@ -77,7 +78,7 @@ function Letter({
         {letter.status !== "open" ? (
           <Badge tone={letter.status === "retried" ? "info" : "neutral"}>{letter.status}</Badge>
         ) : editable ? (
-          <div className="flex shrink-0 gap-2">
+          <div className="ml-auto flex shrink-0 gap-2">
             <Button
               size="sm"
               variant="secondary"
