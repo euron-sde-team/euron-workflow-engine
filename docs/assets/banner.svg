@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-labelledby="t d">
+  <title id="t">Euron WorkflowEngine</title>
+  <desc id="d">Durable workflow automation on infrastructure you own</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#061614"/>
+      <stop offset="1" stop-color="#0b2723"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.82" cy="0.45" r="0.5">
+      <stop offset="0" stop-color="#2dd4bf" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.035"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0L10 5L0 10z" fill="#2dd4bf"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="320" rx="16" fill="url(#bg)"/>
+  <rect width="1280" height="320" rx="16" fill="url(#grid)"/>
+  <rect width="1280" height="320" rx="16" fill="url(#halo)"/>
+
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="72" y="140" fill="#effbf9" font-size="54" font-weight="650" letter-spacing="-1.2">Euron WorkflowEngine</text>
+    <text x="74" y="186" fill="#9cc4bd" font-size="22" font-weight="400">Durable workflow automation on infrastructure you own.</text>
+    <text x="74" y="246" font-family="JetBrains Mono, SFMono-Regular, Menlo, monospace" font-size="15" fill="#7fa8a1" xml:space="preserve">visual editor<tspan fill="#2f5550">  /  </tspan>signed webhooks<tspan fill="#2f5550">  /  </tspan>schedules and events<tspan fill="#2f5550">  /  </tspan>retries and resume</text>
+  </g>
+
+  <!-- A small workflow: trigger, transform, a branch, and a step that retried -->
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12">
+    <path d="M934 104 L 968 104" stroke="#2dd4bf" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+    <path d="M1074 104 C 1094 104 1094 72 1114 72" stroke="#2dd4bf" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+    <path d="M1074 104 C 1094 104 1094 196 1114 196" stroke="#2dd4bf" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+    <path d="M1170 220 L 1170 246" stroke="#2dd4bf" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+
+    <rect x="842" y="84" width="92" height="40" rx="10" fill="#0f2622" stroke="#2dd4bf" stroke-opacity="0.55"/>
+    <circle cx="860" cy="104" r="6" fill="#f59e0b"/>
+    <text x="874" y="108" fill="#d7f3ee">Webhook</text>
+
+    <rect x="970" y="84" width="104" height="40" rx="10" fill="#0f2622" stroke="#2dd4bf" stroke-opacity="0.55"/>
+    <circle cx="988" cy="104" r="6" fill="#2dd4bf"/>
+    <text x="1002" y="108" fill="#d7f3ee">Transform</text>
+
+    <rect x="1116" y="52" width="112" height="40" rx="10" fill="#0f2622" stroke="#2dd4bf" stroke-opacity="0.35" stroke-dasharray="5 5"/>
+    <circle cx="1134" cy="72" r="6" fill="#4b6b66"/>
+    <text x="1148" y="76" fill="#7fa8a1">Tell sales</text>
+
+    <rect x="1116" y="176" width="112" height="44" rx="10" fill="#10312b" stroke="#2dd4bf" stroke-width="1.6"/>
+    <circle cx="1134" cy="198" r="6" fill="#34d399"/>
+    <text x="1148" y="196" fill="#effbf9" font-weight="600">Ship order</text>
+    <text x="1148" y="212" fill="#7fa8a1" font-size="10.5">attempt 2 of 4</text>
+
+    <rect x="1116" y="248" width="112" height="40" rx="10" fill="#0f2622" stroke="#2dd4bf" stroke-opacity="0.55"/>
+    <circle cx="1134" cy="268" r="6" fill="#2dd4bf"/>
+    <text x="1148" y="272" fill="#d7f3ee">Archive</text>
+  </g>
+</svg>
