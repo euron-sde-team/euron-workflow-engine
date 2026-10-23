@@ -244,6 +244,11 @@ async def worker(container: Container, demo_apis: str) -> AsyncIterator[Any]:
         asyncio.create_task(executor.run(stopping)),
         asyncio.create_task(scheduler.run(stopping)),
     ]
+    from workflow_engine.runtime import presence
+
+    await presence.announce(
+        container.redis, "it-worker-1", concurrency=executor.concurrency, busy=0, leader=True
+    )
     yield executor
     stopping.set()
     await asyncio.gather(*tasks, return_exceptions=True)
