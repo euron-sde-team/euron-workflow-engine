@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { JsonView } from "@/components/json-view";
 import { NodeIcon } from "@/components/node-icon";
 import { SchemaForm } from "@/components/editor/schema-form";
+import { TriggerInfoBox } from "@/components/editor/trigger-info";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorNotice, Spinner } from "@/components/ui/feedback";
@@ -22,6 +23,7 @@ import type {
   NodeTestResult,
   NodeType,
   RetryPolicy,
+  TriggerInfo,
 } from "@/lib/types";
 
 export type TestContext = {
@@ -239,6 +241,8 @@ export function Inspector({
   issues,
   readOnly,
   testContext,
+  trigger,
+  active,
   onChange,
   onDelete,
   onDuplicate,
@@ -251,6 +255,8 @@ export function Inspector({
   issues: Issue[];
   readOnly: boolean;
   testContext: TestContext;
+  trigger: TriggerInfo | undefined;
+  active: boolean;
   onChange: (spec: NodeSpec) => void;
   onDelete: () => void;
   onDuplicate: () => void;
@@ -313,6 +319,9 @@ export function Inspector({
         <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto px-4 pb-6">
           <TabsContent value="configure">
             <p className="text-muted-foreground mb-4 text-[12.5px]">{nodeType.description}</p>
+            {nodeType.is_trigger ? (
+              <TriggerInfoBox node={node} trigger={trigger} active={active} />
+            ) : null}
             <SchemaForm
               schema={nodeType.config_schema}
               value={node.config}

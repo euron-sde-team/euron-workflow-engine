@@ -751,6 +751,8 @@ function EditorCanvas({
               issues={issues.filter((i) => i.node_id === selectedNode.id)}
               readOnly={readOnly}
               testContext={testContext}
+              trigger={workflow.triggers.find((t) => t.node_id === selectedNode.id)}
+              active={workflow.active}
               onChange={updateSpec}
               onDelete={() => removeNode(selectedNode.id)}
               onDuplicate={() => duplicateNode(selectedNode.id)}
