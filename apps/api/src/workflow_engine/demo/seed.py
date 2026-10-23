@@ -76,7 +76,7 @@ async def run(settings: Settings, password: str, *, history_days: int = 14) -> N
         async with container.db.session() as session:
             if await UserRepository(session).by_email(OWNER[1]) is not None:
                 print("Demo data is already present.")
-                print_logins(settings)
+                print_logins(settings, password)
                 return
         demo = await seed_people(container, settings, password)
         await seed_warehouse(settings, password)
@@ -95,18 +95,19 @@ async def run(settings: Settings, password: str, *, history_days: int = 14) -> N
         stale = [key async for key in container.redis.scan_iter(match="wfe:dash:*")]
         if stale:
             await container.redis.delete(*stale)
-        print_logins(settings)
+        print_logins(settings, password)
     finally:
         await container.close()
 
 
-def print_logins(settings: Settings) -> None:
+def print_logins(settings: Settings, password: str) -> None:
     print("")
     print(f"  Demo workspace  {WORKSPACE_NAME} (northwind)")
     print(f"  Sign in         {settings.web_url}")
     print(f"    {OWNER[1]:<32} owner")
     for _, email, role in PEOPLE:
         print(f"    {email:<32} {role}")
+    print(f"  Password        {password}   (every demo account, from deploy/compose/.env)")
     print(f"  Shop webhook    POST {settings.hooks_base_url}/hooks/northwind/shop/orders")
 
 
