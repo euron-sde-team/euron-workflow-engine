@@ -24,7 +24,7 @@ export function GraphPreview({
     [definition, types],
   );
   return (
-    <div className={className ?? "border-border bg-canvas h-72 rounded-xl border"}>
+    <div className={className ?? "border-border bg-canvas h-80 rounded-xl border"}>
       <ReactFlow<CanvasNode, CanvasEdge>
         nodes={nodes}
         edges={edges}
@@ -36,7 +36,7 @@ export function GraphPreview({
         zoomOnScroll={false}
         preventScrolling={false}
         fitView
-        fitViewOptions={{ padding: 0.15, maxZoom: 0.9 }}
+        fitViewOptions={{ padding: 0.08, maxZoom: 0.9 }}
         minZoom={0.1}
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{ type: "smoothstep" }}
