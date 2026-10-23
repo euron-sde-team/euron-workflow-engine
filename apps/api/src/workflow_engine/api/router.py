@@ -7,12 +7,31 @@ from workflow_engine.api.routes import (
     auth,
     catalog,
     credentials,
+    dead_letters,
+    events,
+    executions,
     health,
+    hooks,
+    nodes,
     variables,
     workflows,
     workspaces,
 )
 
 api_router = APIRouter()
-for module in (health, auth, workspaces, catalog, workflows, credentials, variables, api_keys):
+for module in (
+    health,
+    auth,
+    workspaces,
+    catalog,
+    workflows,
+    nodes,
+    executions,
+    dead_letters,
+    events,
+    credentials,
+    variables,
+    api_keys,
+    hooks,
+):
     api_router.include_router(module.router)
