@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="t d">
+  <title id="t">Euron WorkflowEngine architecture</title>
+  <desc id="d">People and webhook senders reach the web app and the API through one load balancer. The API and the workers keep all state, including the step queue, in PostgreSQL; Valkey carries the leader lock, wake-up signals and rate limits; KMS seals credentials and Secrets Manager holds the application secrets. Workers run the steps against the workflow data bucket, the workflow queues, SES and public APIs through the outbound guard.</desc>
+  <style>
+    .t { font-family: Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif; }
+    .m { font-family: JetBrains Mono, SFMono-Regular, Menlo, monospace; }
+    .h { font-size: 17px; font-weight: 650; fill: #ecf7f5; }
+    .s { font-size: 13px; fill: #9bbdb7; }
+    .x { font-size: 12px; fill: #6f948e; }
+    .box { fill: #0f1a19; stroke: #263a37; stroke-width: 1.2; }
+    .hot { fill: #0f2421; stroke: #2dd4bf; stroke-opacity: 0.6; stroke-width: 1.4; }
+    .aws { fill: #111b22; stroke: #33475a; stroke-width: 1.2; }
+    .zone { fill: none; stroke: #263a37; stroke-dasharray: 5 6; stroke-width: 1.2; }
+    .arrow { stroke: #4b6b66; stroke-width: 1.6; fill: none; marker-end: url(#a); }
+    .arrowhot { stroke: #2dd4bf; stroke-opacity: 0.85; stroke-width: 1.6; fill: none; marker-end: url(#ah); }
+    .arrowopt { stroke: #4b6b66; stroke-width: 1.4; fill: none; stroke-dasharray: 5 5; marker-end: url(#a); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4b6b66"/></marker>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2dd4bf"/></marker>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#fff" stroke-opacity="0.03"/></pattern>
+  </defs>
+  <rect width="1280" height="760" rx="16" fill="#08110f"/>
+  <rect width="1280" height="760" rx="16" fill="url(#grid)"/>
+
+  <g class="t">
+    <text class="h" x="40" y="52">Euron WorkflowEngine</text>
+    <text class="x" x="40" y="74">as deployed by infra/terraform/modules/deployment</text>
+
+    <!-- People and senders -->
+    <rect class="box" x="40" y="170" width="200" height="104" rx="12"/>
+    <text class="h" x="60" y="205">Owners, editors,</text>
+    <text class="h" x="60" y="227">viewers</text>
+    <text class="s" x="60" y="252">app.&lt;domain&gt;</text>
+
+    <rect class="box" x="40" y="320" width="200" height="124" rx="12"/>
+    <text class="h" x="60" y="355">Webhook senders</text>
+    <text class="h" x="60" y="377">and API clients</text>
+    <text class="s" x="60" y="402">signed /hooks/...</text>
+    <text class="s" x="60" y="422">wfk_ API keys</text>
+
+    <!-- Edge -->
+    <rect class="aws" x="290" y="200" width="170" height="220" rx="12"/>
+    <text class="h" x="308" y="235">WAF</text>
+    <text class="s" x="308" y="256">optional, rate limit</text>
+    <line x1="308" y1="274" x2="442" y2="274" stroke="#33475a"/>
+    <text class="h" x="308" y="306">Load balancer</text>
+    <text class="s" x="308" y="327">TLS, host rules</text>
+    <text class="x" x="308" y="398">app. / api.</text>
+
+    <path class="arrow" d="M240 222 C 266 222 266 262 290 262"/>
+    <path class="arrow" d="M240 382 C 266 382 266 340 290 340"/>
+
+    <!-- Private subnets -->
+    <rect class="zone" x="500" y="96" width="300" height="620" rx="14"/>
+    <text class="x" x="518" y="122">ECS Fargate, private subnets, ARM64</text>
+
+    <rect class="box" x="520" y="140" width="260" height="96" rx="12"/>
+    <text class="h" x="540" y="174">web</text>
+    <text class="s" x="540" y="196">Next.js standalone, canvas editor</text>
+    <text class="s" x="540" y="216">runtime config from /env.js</text>
+
+    <rect class="hot" x="520" y="268" width="260" height="148" rx="12"/>
+    <text class="h" x="540" y="302">api</text>
+    <text class="s" x="540" y="324">FastAPI + uvicorn</text>
+    <text class="s" x="540" y="344">workflows, versions, runs,</text>
+    <text class="s" x="540" y="364">webhooks, events, vault</text>
+    <text class="x" x="540" y="394">verifies, then enqueues</text>
+
+    <rect class="hot" x="520" y="450" width="260" height="246" rx="12"/>
+    <text class="h" x="540" y="484">workers (2 or more)</text>
+    <text class="s" x="540" y="506">claim steps: SKIP LOCKED</text>
+    <text class="s" x="540" y="526">run nodes, retry with backoff,</text>
+    <text class="s" x="540" y="546">route branches, merges, loops</text>
+    <line x1="540" y1="566" x2="760" y2="566" stroke="#263a37"/>
+    <text class="h" x="540" y="594">elected scheduler</text>
+    <text class="s" x="540" y="616">one worker at a time:</text>
+    <text class="s" x="540" y="636">schedules, wake-ups, reaper,</text>
+    <text class="s" x="540" y="656">deadlines, admissions, pruning</text>
+    <text class="x" x="540" y="684">same image as the api</text>
+
+    <path class="arrow" d="M460 262 C 490 262 490 188 520 188"/>
+    <path class="arrowhot" d="M460 340 L 520 340"/>
+
+    <!-- State -->
+    <rect class="hot" x="850" y="110" width="390" height="104" rx="12"/>
+    <text class="h" x="870" y="144">PostgreSQL 16 (RDS)</text>
+    <text class="s" x="870" y="166">workflows, versions, executions, steps, logs,</text>
+    <text class="s" x="870" y="186">credentials (sealed), audit: and the step queue</text>
+
+    <rect class="box" x="850" y="232" width="390" height="80" rx="12"/>
+    <text class="h" x="870" y="264">Valkey (ElastiCache)</text>
+    <text class="s" x="870" y="288">leader lock, wake-up and cancel signals, rate limits</text>
+
+    <rect class="aws" x="850" y="330" width="186" height="92" rx="12"/>
+    <text class="h" x="870" y="362">KMS</text>
+    <text class="s" x="870" y="384">vault key per</text>
+    <text class="s" x="870" y="402">credential context</text>
+
+    <rect class="aws" x="1054" y="330" width="186" height="92" rx="12"/>
+    <text class="h" x="1074" y="362">Secrets Manager</text>
+    <text class="s" x="1074" y="384">session secret, pepper,</text>
+    <text class="s" x="1074" y="402">RDS password</text>
+
+    <path class="arrowhot" d="M780 300 C 816 300 816 162 850 162"/>
+    <path class="arrow" d="M780 330 C 818 330 818 272 850 272"/>
+    <path class="arrow" d="M780 370 C 818 370 818 376 850 376"/>
+    <path class="arrowhot" d="M780 500 C 830 500 830 190 850 190"/>
+    <path class="arrow" d="M780 520 C 826 520 826 296 850 296"/>
+    <path class="arrow" d="M780 540 C 822 540 822 404 850 404"/>
+
+    <!-- What workflows reach -->
+    <rect class="zone" x="840" y="456" width="410" height="260" rx="14"/>
+    <text class="x" x="858" y="482">What workflow steps reach, allowlisted</text>
+
+    <rect class="aws" x="858" y="498" width="180" height="90" rx="12"/>
+    <text class="h" x="876" y="528">S3 data bucket</text>
+    <text class="s" x="876" y="550">get and put nodes</text>
+    <text class="s" x="876" y="570">SSE-KMS</text>
+
+    <rect class="aws" x="1052" y="498" width="180" height="90" rx="12"/>
+    <text class="h" x="1070" y="528">SQS queues</text>
+    <text class="s" x="1070" y="550">publish node</text>
+    <text class="s" x="1070" y="570">dead-letter queues</text>
+
+    <rect class="aws" x="858" y="604" width="180" height="94" rx="12"/>
+    <text class="h" x="876" y="634">SES</text>
+    <text class="s" x="876" y="656">email node, TLS,</text>
+    <text class="s" x="876" y="676">bounce suppression</text>
+
+    <rect class="box" x="1052" y="604" width="180" height="94" rx="12"/>
+    <text class="h" x="1070" y="634">Public APIs</text>
+    <text class="s" x="1070" y="656">HTTP, Slack, Postgres</text>
+    <text class="s" x="1070" y="676">via the outbound guard</text>
+
+    <path class="arrowhot" d="M780 556 C 810 556 810 560 840 560"/>
+  </g>
+</svg>
