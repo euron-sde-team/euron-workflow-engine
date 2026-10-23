@@ -8,9 +8,16 @@ AWS_LOCAL   := docker compose --env-file $(COMPOSE_DIR)/.env -f $(COMPOSE_DIR)/c
 API         := uv --directory apps/api run
 TF_IMAGE    := hashicorp/terraform:1.16.6
 TF_ENVS     := local-floci aws-dev aws-prod
-# Use a local terraform when installed, otherwise the pinned container.
-TF          := $(shell command -v terraform >/dev/null 2>&1 && echo terraform || echo docker run --rm -v $(CURDIR)/infra/terraform:/infra -v wfe-tf-plugins:/plugins -e TF_PLUGIN_CACHE_DIR=/plugins -e TF_DATA_DIR=/tmp/tfdata -w /infra $(TF_IMAGE))
-TF_ROOT     := $(shell command -v terraform >/dev/null 2>&1 && echo infra/terraform || echo /infra)
+# Use a local terraform when installed, otherwise the pinned container. The container writes
+# each environment's .terraform directory into the (git-ignored) working tree, so `init` and
+# `validate` can run as separate containers.
+ifeq ($(shell command -v terraform),)
+TF          := docker run --rm -v "$(CURDIR)/infra/terraform:/infra" -v wfe-tf-plugins:/plugins -e TF_PLUGIN_CACHE_DIR=/plugins -w /infra $(TF_IMAGE)
+TF_ROOT     := /infra
+else
+TF          := terraform
+TF_ROOT     := infra/terraform
+endif
 # The browser suites sign in as the demo accounts seeded by `make demo`.
 DEMO_PASSWORD = $(shell grep -s '^WFE_DEMO_PASSWORD=' $(COMPOSE_DIR)/.env | cut -d= -f2)
 ENV         ?= aws-dev
@@ -114,11 +121,11 @@ tf-validate: ## terraform validate every environment (no backend, no credentials
 	done
 
 tf-lint: ## tflint every module and environment (plugins cached in a docker volume)
-	docker run --rm -v $(CURDIR)/infra/terraform:/data -v wfe-tflint:/plugins -e TFLINT_PLUGIN_DIR=/plugins -w /data ghcr.io/terraform-linters/tflint:v0.64.0 --init
-	docker run --rm -v $(CURDIR)/infra/terraform:/data -v wfe-tflint:/plugins -e TFLINT_PLUGIN_DIR=/plugins -w /data ghcr.io/terraform-linters/tflint:v0.64.0 --recursive --format compact
+	docker run --rm -v "$(CURDIR)/infra/terraform:/data" -v wfe-tflint:/plugins -e TFLINT_PLUGIN_DIR=/plugins -w /data ghcr.io/terraform-linters/tflint:v0.64.0 --init
+	docker run --rm -v "$(CURDIR)/infra/terraform:/data" -v wfe-tflint:/plugins -e TFLINT_PLUGIN_DIR=/plugins -w /data ghcr.io/terraform-linters/tflint:v0.64.0 --recursive --format compact
 
 tf-security: ## checkov policy scan of the Terraform (any unskipped finding fails)
-	docker run --rm -v $(CURDIR)/infra/terraform:/tf bridgecrew/checkov:3.3.30 -d /tf --framework terraform --quiet --compact --config-file /tf/.checkov.yaml
+	docker run --rm -v "$(CURDIR)/infra/terraform:/tf" bridgecrew/checkov:3.3.30 -d /tf --framework terraform --quiet --compact --config-file /tf/.checkov.yaml
 
 # --- AWS ---------------------------------------------------------------------
 
