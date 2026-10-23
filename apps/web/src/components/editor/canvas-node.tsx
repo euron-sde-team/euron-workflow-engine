@@ -35,13 +35,7 @@ function WorkflowNodeView({ data, selected }: NodeProps<CanvasNode>) {
       data-testid={`node-${spec.id}`}
     >
       {inputs.includes("main") ? (
-        <Handle
-          type="target"
-          position={Position.Left}
-          id="main"
-          className="!size-3 !border-2"
-          aria-label="Input"
-        />
+        <Handle type="target" position={Position.Left} id="main" className="!size-3 !border-2" />
       ) : null}
       {inputs.includes("loop") ? (
         <Handle
