@@ -258,7 +258,7 @@ class VersionRepository(Repository):
                 WorkflowVersion.id.in_(version_ids)
             )
         )
-        return dict(result.tuples().all())
+        return {row[0]: row[1] for row in result.all()}
 
 
 class TriggerRepository(Repository):

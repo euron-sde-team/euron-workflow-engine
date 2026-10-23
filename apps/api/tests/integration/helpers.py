@@ -89,3 +89,41 @@ async def credential(
     assert response.status_code == 201, response.text
     credential_id: str = response.json()["id"]
     return credential_id
+
+
+async def run(
+    client: httpx.AsyncClient,
+    account: Account,
+    workflow_id: str,
+    payload: Any = None,
+    *,
+    draft: bool = False,
+    key: str | None = None,
+) -> dict[str, Any]:
+    headers = {**account.headers, **({"idempotency-key": key} if key else {})}
+    response = await client.post(
+        f"{base(account)}/workflows/{workflow_id}/run",
+        json={"payload": payload, "use_draft": draft},
+        headers=headers,
+    )
+    assert response.status_code == 201, response.text
+    started: dict[str, Any] = response.json()
+    return started
+
+
+def steps_by_node(execution: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for step in execution["steps"]:
+        grouped.setdefault(step["node_id"], []).append(step)
+    return grouped
+
+
+async def step_detail(
+    client: httpx.AsyncClient, account: Account, execution_id: str, step_id: str
+) -> dict[str, Any]:
+    response = await client.get(
+        f"{base(account)}/executions/{execution_id}/steps/{step_id}", headers=account.headers
+    )
+    assert response.status_code == 200, response.text
+    detail: dict[str, Any] = response.json()
+    return detail

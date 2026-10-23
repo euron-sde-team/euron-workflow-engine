@@ -20,7 +20,7 @@ class VariableRepository(Repository):
         result = await self.session.execute(
             select(Variable.key, Variable.value).where(Variable.workspace_id == workspace_id)
         )
-        return {str(key): str(value) for key, value in result.tuples()}
+        return {str(row[0]): str(row[1]) for row in result.all()}
 
     async def upsert(
         self,

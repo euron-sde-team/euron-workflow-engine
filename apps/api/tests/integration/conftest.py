@@ -199,3 +199,79 @@ def mailpit_messages() -> list[dict[str, Any]]:
     response.raise_for_status()
     messages: list[dict[str, Any]] = response.json().get("messages", [])
     return messages
+
+
+def _free_port() -> int:
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        port: int = sock.getsockname()[1]
+        return port
+
+
+@pytest.fixture(scope="session")
+async def demo_apis() -> AsyncIterator[str]:
+    """The Northwind demo APIs, served in process on a free port."""
+    import asyncio
+
+    import uvicorn
+
+    from workflow_engine.demo.apis import create_app as demo_app
+
+    port = _free_port()
+    server = uvicorn.Server(
+        uvicorn.Config(demo_app(), host="127.0.0.1", port=port, log_level="warning", lifespan="off")
+    )
+    task = asyncio.create_task(server.serve())
+    while not server.started:  # noqa: ASYNC110 - uvicorn exposes a flag, not an event
+        await asyncio.sleep(0.05)
+    yield f"http://127.0.0.1:{port}"
+    server.should_exit = True
+    await task
+
+
+@pytest.fixture(scope="session")
+async def worker(container: Container, demo_apis: str) -> AsyncIterator[Any]:
+    """A real executor and scheduler on the app's container, for the whole session."""
+    import asyncio
+
+    from workflow_engine.runtime.executor import Executor
+    from workflow_engine.runtime.scheduler import Scheduler
+
+    stopping = asyncio.Event()
+    executor = Executor(container, "it-worker-1")
+    scheduler = Scheduler(container, "it-worker-1")
+    tasks = [
+        asyncio.create_task(executor.run(stopping)),
+        asyncio.create_task(scheduler.run(stopping)),
+    ]
+    yield executor
+    stopping.set()
+    await asyncio.gather(*tasks, return_exceptions=True)
+
+
+TERMINAL = {"succeeded", "failed", "cancelled"}
+
+
+async def wait_for(
+    client: httpx.AsyncClient,
+    account: Account,
+    execution_id: str,
+    statuses: set[str] | None = None,
+    seconds: float = 20.0,
+) -> dict[str, Any]:
+    import asyncio
+    import time
+
+    wanted = statuses or TERMINAL
+    deadline = time.monotonic() + seconds
+    body: dict[str, Any] = {}
+    while time.monotonic() < deadline:
+        response = await client.get(
+            f"/api/v1/workspaces/{account.workspace}/executions/{execution_id}",
+            headers=account.headers,
+        )
+        body = response.json()
+        if body.get("status") in wanted:
+            return body
+        await asyncio.sleep(0.1)
+    raise AssertionError(f"execution {execution_id} stayed {body.get('status')}: {body}")
