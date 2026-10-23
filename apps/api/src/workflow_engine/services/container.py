@@ -41,15 +41,16 @@ class DefinitionCache:
         self._capacity = capacity
         self._entries: OrderedDict[uuid.UUID, CompiledDefinition] = OrderedDict()
 
-    def get(
-        self, version_id: uuid.UUID, raw: dict[str, Any] | None = None
-    ) -> CompiledDefinition | None:
+    def get(self, version_id: uuid.UUID) -> CompiledDefinition | None:
         entry = self._entries.get(version_id)
         if entry is not None:
             self._entries.move_to_end(version_id)
+        return entry
+
+    def load(self, version_id: uuid.UUID, raw: dict[str, Any]) -> CompiledDefinition:
+        entry = self.get(version_id)
+        if entry is not None:
             return entry
-        if raw is None:
-            return None
         definition = WorkflowDefinition.model_validate(raw)
         entry = CompiledDefinition(definition, Graph(definition))
         self._entries[version_id] = entry
