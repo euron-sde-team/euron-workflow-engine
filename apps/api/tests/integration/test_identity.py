@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import re
+import uuid
+
 import httpx
 import pytest
+from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 
@@ -69,6 +73,30 @@ async def test_non_members_cannot_see_a_workspace(
         )
         assert response.status_code == 404, path
         assert response.json()["error"]["code"] == "not_found"
+
+
+async def test_every_workspace_route_answers_404_to_non_members(
+    client: httpx.AsyncClient, app: FastAPI, owner: Account, stranger: Account
+) -> None:
+    """A sweep over the whole API: a non-member learns nothing and changes nothing."""
+    prefix = "/api/v1/workspaces/{workspace}"
+    checked = []
+    # The OpenAPI document lists every route with its methods, however routers are mounted.
+    for template, operations in app.openapi()["paths"].items():
+        if not template.startswith(prefix):
+            continue
+        path = template.replace("{workspace}", owner.workspace)
+        path = re.sub(r"\{[^}]+\}", str(uuid.uuid4()), path)
+        for method in sorted(m.upper() for m in operations):
+            body = {} if method in {"POST", "PUT", "PATCH"} else None
+            response = await client.request(method, path, json=body, headers=stranger.headers)
+            assert response.status_code == 404, (method, template, response.text)
+            assert response.json()["error"]["code"] == "not_found"
+            checked.append(f"{method} {template}")
+    assert len(checked) >= 50, checked
+    # The owner's workspace is untouched.
+    me = await client.get(f"/api/v1/workspaces/{owner.workspace}", headers=owner.headers)
+    assert me.status_code == 200
 
 
 async def test_roles_gate_membership_changes(client: httpx.AsyncClient, owner: Account) -> None:
