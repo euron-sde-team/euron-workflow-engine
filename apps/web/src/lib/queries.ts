@@ -18,6 +18,7 @@ import type {
   Definition,
   DraftSaved,
   Execution,
+  ExecutionDefinition,
   ExecutionSummary,
   Issue,
   LogPage,
@@ -341,6 +342,15 @@ export function useExecution(workspace: string, id: string | null) {
     queryFn: () => api<Execution>(`${ws(workspace)}/executions/${id}`),
     enabled: Boolean(id),
     refetchInterval: (query) => (query.state.data && ACTIVE.has(query.state.data.status) ? 1000 : false),
+  });
+}
+
+/** The definition an execution ran never changes, so it is fetched once. */
+export function useExecutionDefinition(workspace: string, id: string) {
+  return useQuery({
+    queryKey: ["execution-definition", workspace, id],
+    queryFn: () => api<ExecutionDefinition>(`${ws(workspace)}/executions/${id}/definition`),
+    staleTime: Infinity,
   });
 }
 

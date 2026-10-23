@@ -279,6 +279,8 @@ export type Execution = ExecutionSummary & {
   steps_truncated: boolean;
 };
 
+export type ExecutionDefinition = { version_id: string; version_number: number | null; definition: Definition };
+
 export type LogLine = {
   id: number;
   step_id: string | null;
