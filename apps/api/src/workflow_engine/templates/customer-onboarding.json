@@ -1,0 +1,168 @@
+{
+  "slug": "customer-onboarding",
+  "name": "Welcome new customers and follow up",
+  "summary": "Sends a welcome email on sign-up, waits three days, then checks in with accounts that are still new.",
+  "description": "The sign-up form calls a token-protected webhook. The customer gets a welcome email at once; three days later the workflow wakes up (no worker is held while it waits), looks the company up and sends a personal check-in to smaller accounts.",
+  "category": "Customer success",
+  "tags": [
+    "webhook",
+    "wait",
+    "email"
+  ],
+  "credentials": [
+    {
+      "name": "Signup webhook token",
+      "type": "webhook_secret"
+    }
+  ],
+  "variables": [
+    {
+      "key": "CRM_API",
+      "example": "http://demo-apis:9131/crm"
+    }
+  ],
+  "settings": {},
+  "definition": {
+    "schema_version": 1,
+    "nodes": [
+      {
+        "id": "signup",
+        "type": "trigger.webhook",
+        "name": "New sign-up",
+        "position": {
+          "x": 0,
+          "y": 160
+        },
+        "config": {
+          "path": "signups",
+          "method": "POST",
+          "auth": "bearer",
+          "credential_id": "@credential:Signup webhook token",
+          "token_header": "Authorization",
+          "response": "accepted",
+          "sample_payload": {
+            "name": "Jonas Berg",
+            "email": "jonas@fjordline.example.com",
+            "domain": "fjordline.example.com"
+          }
+        }
+      },
+      {
+        "id": "welcome",
+        "type": "email.send",
+        "name": "Welcome email",
+        "position": {
+          "x": 280,
+          "y": 160
+        },
+        "config": {
+          "to": "{{ trigger.body.email }}",
+          "subject": "Welcome to Northwind, {{ trigger.body.name }}",
+          "text": "Hi {{ trigger.body.name }},\n\nThanks for joining Northwind Outfitters. Your account is ready.\n\nThe Northwind team"
+        }
+      },
+      {
+        "id": "three_days",
+        "type": "flow.wait",
+        "name": "Wait three days",
+        "position": {
+          "x": 560,
+          "y": 160
+        },
+        "config": {
+          "mode": "delay",
+          "amount": 3,
+          "unit": "days"
+        }
+      },
+      {
+        "id": "company",
+        "type": "http.request",
+        "name": "Look up the company",
+        "position": {
+          "x": 840,
+          "y": 160
+        },
+        "config": {
+          "url": "{{ env.CRM_API }}/companies/{{ trigger.body.domain }}",
+          "fail_on_http_error": false
+        }
+      },
+      {
+        "id": "small",
+        "type": "flow.if",
+        "name": "Small account?",
+        "position": {
+          "x": 1120,
+          "y": 160
+        },
+        "config": {
+          "combinator": "any",
+          "conditions": [
+            {
+              "left": "{{ input.status }}",
+              "operator": "equals",
+              "right": "404"
+            },
+            {
+              "left": "{{ input.body.employees }}",
+              "operator": "lt",
+              "right": "500"
+            }
+          ]
+        }
+      },
+      {
+        "id": "check_in",
+        "type": "email.send",
+        "name": "Personal check-in",
+        "position": {
+          "x": 1400,
+          "y": 80
+        },
+        "config": {
+          "to": "{{ trigger.body.email }}",
+          "subject": "How is it going, {{ trigger.body.name }}?",
+          "text": "Hi {{ trigger.body.name }},\n\nIt has been a few days. Reply to this email if there is anything we can help with.\n\nThe Northwind team"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "signup-main-welcome",
+        "source": "signup",
+        "source_port": "main",
+        "target": "welcome",
+        "target_port": "main"
+      },
+      {
+        "id": "welcome-main-three_days",
+        "source": "welcome",
+        "source_port": "main",
+        "target": "three_days",
+        "target_port": "main"
+      },
+      {
+        "id": "three_days-main-company",
+        "source": "three_days",
+        "source_port": "main",
+        "target": "company",
+        "target_port": "main"
+      },
+      {
+        "id": "company-main-small",
+        "source": "company",
+        "source_port": "main",
+        "target": "small",
+        "target_port": "main"
+      },
+      {
+        "id": "small-true-check_in",
+        "source": "small",
+        "source_port": "true",
+        "target": "check_in",
+        "target_port": "main"
+      }
+    ]
+  }
+}

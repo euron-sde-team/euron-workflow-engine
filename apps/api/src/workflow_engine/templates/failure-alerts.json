@@ -1,0 +1,119 @@
+{
+  "slug": "failure-alerts",
+  "name": "Tell on-call when a workflow fails",
+  "summary": "Subscribes to execution.failed and posts the failing step and error to on-call.",
+  "description": "The engine publishes execution.failed whenever an execution fails. This workflow formats the error and posts it to the on-call channel with a link to the execution, and emails the on-call rotation.",
+  "category": "Operations",
+  "tags": [
+    "events",
+    "alerts"
+  ],
+  "credentials": [
+    {
+      "name": "On-call Slack",
+      "type": "slack_webhook"
+    }
+  ],
+  "variables": [
+    {
+      "key": "ONCALL_EMAIL",
+      "example": "oncall@northwind.example.com"
+    }
+  ],
+  "settings": {},
+  "definition": {
+    "schema_version": 1,
+    "nodes": [
+      {
+        "id": "failed",
+        "type": "trigger.event",
+        "name": "Execution failed",
+        "position": {
+          "x": 0,
+          "y": 160
+        },
+        "config": {
+          "event": "execution.failed",
+          "sample_payload": {
+            "event": "execution.failed",
+            "payload": {
+              "workflow_name": "Ship paid orders from the shop",
+              "error": {
+                "code": "http_422",
+                "message": "POST /shipments answered 422",
+                "node_id": "create_shipment"
+              },
+              "url": "http://localhost:3130/executions/example"
+            }
+          }
+        }
+      },
+      {
+        "id": "message",
+        "type": "core.transform",
+        "name": "Write the alert",
+        "position": {
+          "x": 280,
+          "y": 160
+        },
+        "config": {
+          "mode": "template",
+          "template": {
+            "text": ":warning: {{ trigger.payload.workflow_name }} failed at {{ default(trigger.payload.error.node_id, 'the start') }}: {{ trigger.payload.error.message }} <{{ trigger.payload.url }}|open>"
+          }
+        }
+      },
+      {
+        "id": "post",
+        "type": "slack.message",
+        "name": "Post to on-call",
+        "position": {
+          "x": 560,
+          "y": 80
+        },
+        "config": {
+          "credential_id": "@credential:On-call Slack",
+          "text": "{{ input.text }}",
+          "username": "WorkflowEngine"
+        }
+      },
+      {
+        "id": "email",
+        "type": "email.send",
+        "name": "Email on-call",
+        "position": {
+          "x": 560,
+          "y": 260
+        },
+        "config": {
+          "to": "{{ env.ONCALL_EMAIL }}",
+          "subject": "Workflow failed: {{ trigger.payload.workflow_name }}",
+          "text": "{{ input.text }}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "failed-main-message",
+        "source": "failed",
+        "source_port": "main",
+        "target": "message",
+        "target_port": "main"
+      },
+      {
+        "id": "message-main-post",
+        "source": "message",
+        "source_port": "main",
+        "target": "post",
+        "target_port": "main"
+      },
+      {
+        "id": "message-main-email",
+        "source": "message",
+        "source_port": "main",
+        "target": "email",
+        "target_port": "main"
+      }
+    ]
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "slug": "low-stock-report",
+  "name": "Daily low-stock report",
+  "summary": "Every weekday morning, query the warehouse database and email what needs reordering.",
+  "description": "A schedule in the warehouse's time zone runs a read-only query for items below their reorder point. When anything is low, operations get an email listing each item with what is left.",
+  "category": "Operations",
+  "tags": [
+    "schedule",
+    "postgres",
+    "email"
+  ],
+  "credentials": [
+    {
+      "name": "Warehouse database",
+      "type": "postgres"
+    }
+  ],
+  "variables": [
+    {
+      "key": "OPS_EMAIL",
+      "example": "ops@northwind.example.com"
+    }
+  ],
+  "settings": {},
+  "definition": {
+    "schema_version": 1,
+    "nodes": [
+      {
+        "id": "weekday_morning",
+        "type": "trigger.cron",
+        "name": "Weekdays at 08:00",
+        "position": {
+          "x": 0,
+          "y": 160
+        },
+        "config": {
+          "expression": "0 8 * * MON-FRI",
+          "timezone": "Asia/Kolkata",
+          "overlap": "skip"
+        }
+      },
+      {
+        "id": "low_stock",
+        "type": "db.postgres_query",
+        "name": "Find low stock",
+        "position": {
+          "x": 280,
+          "y": 160
+        },
+        "config": {
+          "credential_id": "@credential:Warehouse database",
+          "sql": "SELECT sku, title, on_hand, reorder_point\nFROM inventory\nWHERE on_hand < reorder_point\nORDER BY on_hand, sku",
+          "parameters": [],
+          "mode": "read_only",
+          "max_rows": 200
+        }
+      },
+      {
+        "id": "anything_low",
+        "type": "flow.if",
+        "name": "Anything low?",
+        "position": {
+          "x": 560,
+          "y": 160
+        },
+        "config": {
+          "conditions": [
+            {
+              "left": "{{ input.row_count }}",
+              "operator": "gt",
+              "right": "0"
+            }
+          ]
+        }
+      },
+      {
+        "id": "lines",
+        "type": "core.transform",
+        "name": "Format the list",
+        "position": {
+          "x": 840,
+          "y": 80
+        },
+        "config": {
+          "expression": "join(`\"\\n\"`, input.rows[*].join(': ', [title, join(' left of ', [to_string(on_hand), to_string(reorder_point)])]))"
+        }
+      },
+      {
+        "id": "email_ops",
+        "type": "email.send",
+        "name": "Email operations",
+        "position": {
+          "x": 1120,
+          "y": 80
+        },
+        "config": {
+          "to": "{{ env.OPS_EMAIL }}",
+          "subject": "Low stock: {{ steps.low_stock.row_count }} items to reorder",
+          "text": "Good morning,\n\nThese items are below their reorder point:\n\n{{ input }}\n\nThe Northwind automations"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "weekday_morning-main-low_stock",
+        "source": "weekday_morning",
+        "source_port": "main",
+        "target": "low_stock",
+        "target_port": "main"
+      },
+      {
+        "id": "low_stock-main-anything_low",
+        "source": "low_stock",
+        "source_port": "main",
+        "target": "anything_low",
+        "target_port": "main"
+      },
+      {
+        "id": "anything_low-true-lines",
+        "source": "anything_low",
+        "source_port": "true",
+        "target": "lines",
+        "target_port": "main"
+      },
+      {
+        "id": "lines-main-email_ops",
+        "source": "lines",
+        "source_port": "main",
+        "target": "email_ops",
+        "target_port": "main"
+      }
+    ]
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "slug": "uptime-monitor",
+  "name": "Uptime monitor for checkout",
+  "summary": "Every fifteen minutes, check the checkout service and alert Slack when it degrades.",
+  "description": "An interval trigger polls the status endpoint of the checkout service. When it reports anything but operational, the ops channel gets an alert with the measured latency. Runs never overlap.",
+  "category": "Operations",
+  "tags": [
+    "interval",
+    "monitoring",
+    "slack"
+  ],
+  "credentials": [
+    {
+      "name": "Ops Slack",
+      "type": "slack_webhook"
+    }
+  ],
+  "variables": [
+    {
+      "key": "STATUS_API",
+      "example": "http://demo-apis:9131/status"
+    }
+  ],
+  "settings": {},
+  "definition": {
+    "schema_version": 1,
+    "nodes": [
+      {
+        "id": "every_15_minutes",
+        "type": "trigger.interval",
+        "name": "Every 15 minutes",
+        "position": {
+          "x": 0,
+          "y": 160
+        },
+        "config": {
+          "every": 15,
+          "unit": "minutes",
+          "overlap": "skip"
+        }
+      },
+      {
+        "id": "check",
+        "type": "http.request",
+        "name": "Check checkout",
+        "position": {
+          "x": 280,
+          "y": 160
+        },
+        "config": {
+          "url": "{{ env.STATUS_API }}/checkout",
+          "query": [
+            {
+              "name": "at",
+              "value": "{{ trigger.scheduled_for }}"
+            }
+          ],
+          "timeout_s": 10
+        },
+        "retry": {
+          "max_attempts": 2,
+          "initial_delay_ms": 1000,
+          "max_delay_ms": 5000,
+          "multiplier": 2,
+          "jitter": true
+        }
+      },
+      {
+        "id": "degraded",
+        "type": "flow.if",
+        "name": "Degraded?",
+        "position": {
+          "x": 560,
+          "y": 160
+        },
+        "config": {
+          "conditions": [
+            {
+              "left": "{{ input.body.status }}",
+              "operator": "not_equals",
+              "right": "operational"
+            }
+          ]
+        }
+      },
+      {
+        "id": "alert",
+        "type": "slack.message",
+        "name": "Alert ops",
+        "position": {
+          "x": 840,
+          "y": 80
+        },
+        "config": {
+          "credential_id": "@credential:Ops Slack",
+          "text": ":rotating_light: checkout is {{ input.body.status }} ({{ input.body.latency_ms }} ms) at {{ input.body.checked_at }}",
+          "username": "Uptime monitor"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "every_15_minutes-main-check",
+        "source": "every_15_minutes",
+        "source_port": "main",
+        "target": "check",
+        "target_port": "main"
+      },
+      {
+        "id": "check-main-degraded",
+        "source": "check",
+        "source_port": "main",
+        "target": "degraded",
+        "target_port": "main"
+      },
+      {
+        "id": "degraded-true-alert",
+        "source": "degraded",
+        "source_port": "true",
+        "target": "alert",
+        "target_port": "main"
+      }
+    ]
+  }
+}

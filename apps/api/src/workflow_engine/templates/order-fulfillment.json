@@ -1,0 +1,221 @@
+{
+  "slug": "order-fulfillment",
+  "name": "Ship paid orders from the shop",
+  "summary": "A signed webhook from the shop creates the shipment, archives the order and tells the warehouse.",
+  "description": "The shop posts every paid order to a webhook signed with HMAC-SHA256. The workflow normalizes the order, alerts sales about large ones, creates the shipment with the fulfillment API (retrying while the warehouse is busy), archives the order and shipment to S3 and publishes an event on the order-events queue.",
+  "category": "E-commerce",
+  "tags": [
+    "orders",
+    "webhook",
+    "s3",
+    "sqs"
+  ],
+  "credentials": [
+    {
+      "name": "Shop webhook secret",
+      "type": "webhook_secret"
+    },
+    {
+      "name": "Sales Slack",
+      "type": "slack_webhook"
+    }
+  ],
+  "variables": [
+    {
+      "key": "FULFILLMENT_API",
+      "example": "http://demo-apis:9131/fulfillment"
+    }
+  ],
+  "settings": {
+    "concurrency_limit": 5
+  },
+  "definition": {
+    "schema_version": 1,
+    "nodes": [
+      {
+        "id": "paid_order",
+        "type": "trigger.webhook",
+        "name": "Paid order",
+        "position": {
+          "x": 0,
+          "y": 200
+        },
+        "config": {
+          "path": "shop/orders",
+          "method": "POST",
+          "auth": "hmac_sha256",
+          "credential_id": "@credential:Shop webhook secret",
+          "signature_header": "X-Shop-Signature",
+          "signature_prefix": "sha256=",
+          "idempotency_header": "Idempotency-Key",
+          "response": "accepted",
+          "sample_payload": {
+            "order_id": "SO-1042",
+            "customer": {
+              "name": "Maya Patel",
+              "email": "maya@trailhead.example.com"
+            },
+            "items": [
+              {
+                "sku": "TENT-2P",
+                "qty": 2,
+                "price": 249.0
+              }
+            ],
+            "total": 498.0
+          }
+        }
+      },
+      {
+        "id": "normalize",
+        "type": "core.transform",
+        "name": "Normalize order",
+        "position": {
+          "x": 280,
+          "y": 200
+        },
+        "config": {
+          "mode": "jmespath",
+          "expression": "{order_id: trigger.body.order_id, customer: trigger.body.customer, items: trigger.body.items, total: trigger.body.total, large: trigger.body.total > `500`}"
+        }
+      },
+      {
+        "id": "is_large",
+        "type": "flow.if",
+        "name": "Large order?",
+        "position": {
+          "x": 560,
+          "y": 60
+        },
+        "config": {
+          "combinator": "all",
+          "conditions": [
+            {
+              "left": "{{ input.total }}",
+              "operator": "gt",
+              "right": "500"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tell_sales",
+        "type": "slack.message",
+        "name": "Tell sales",
+        "position": {
+          "x": 840,
+          "y": 0
+        },
+        "config": {
+          "credential_id": "@credential:Sales Slack",
+          "text": ":tada: Large order {{ input.order_id }} from {{ input.customer.name }}: ${{ format_number(input.total, `2`) }}",
+          "icon_emoji": ":package:"
+        }
+      },
+      {
+        "id": "create_shipment",
+        "type": "http.request",
+        "name": "Create shipment",
+        "position": {
+          "x": 560,
+          "y": 280
+        },
+        "config": {
+          "method": "POST",
+          "url": "{{ env.FULFILLMENT_API }}/shipments",
+          "body_type": "json",
+          "body": {
+            "order_id": "{{ input.order_id }}",
+            "items": "{{ input.items }}"
+          },
+          "timeout_s": 15
+        },
+        "retry": {
+          "max_attempts": 4,
+          "initial_delay_ms": 1000,
+          "max_delay_ms": 20000,
+          "multiplier": 2,
+          "jitter": true
+        }
+      },
+      {
+        "id": "archive",
+        "type": "aws.s3_put",
+        "name": "Archive to S3",
+        "position": {
+          "x": 840,
+          "y": 280
+        },
+        "config": {
+          "key": "orders/{{ steps.normalize.order_id }}.json",
+          "content": {
+            "order": "{{ steps.normalize }}",
+            "shipment": "{{ input.body }}"
+          }
+        }
+      },
+      {
+        "id": "notify_warehouse",
+        "type": "aws.sqs_publish",
+        "name": "Publish order event",
+        "position": {
+          "x": 1120,
+          "y": 280
+        },
+        "config": {
+          "queue": "order-events",
+          "message": {
+            "type": "order.shipped",
+            "order_id": "{{ steps.normalize.order_id }}",
+            "shipment_id": "{{ steps.create_shipment.body.shipment_id }}",
+            "carrier": "{{ steps.create_shipment.body.carrier }}"
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "paid_order-main-normalize",
+        "source": "paid_order",
+        "source_port": "main",
+        "target": "normalize",
+        "target_port": "main"
+      },
+      {
+        "id": "normalize-main-is_large",
+        "source": "normalize",
+        "source_port": "main",
+        "target": "is_large",
+        "target_port": "main"
+      },
+      {
+        "id": "is_large-true-tell_sales",
+        "source": "is_large",
+        "source_port": "true",
+        "target": "tell_sales",
+        "target_port": "main"
+      },
+      {
+        "id": "normalize-main-create_shipment",
+        "source": "normalize",
+        "source_port": "main",
+        "target": "create_shipment",
+        "target_port": "main"
+      },
+      {
+        "id": "create_shipment-main-archive",
+        "source": "create_shipment",
+        "source_port": "main",
+        "target": "archive",
+        "target_port": "main"
+      },
+      {
+        "id": "archive-main-notify_warehouse",
+        "source": "archive",
+        "source_port": "main",
+        "target": "notify_warehouse",
+        "target_port": "main"
+      }
+    ]
+  }
+}

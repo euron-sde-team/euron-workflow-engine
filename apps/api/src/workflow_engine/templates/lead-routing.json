@@ -1,0 +1,294 @@
+{
+  "slug": "lead-routing",
+  "name": "Enrich and route new leads",
+  "summary": "On every lead.created event, look the company up in the CRM and route it by segment.",
+  "description": "The sign-up service publishes lead.created events. The workflow enriches the lead from the CRM, routes enterprise leads to the enterprise channel, emails mid-market leads to the account executives, keeps small businesses for nurturing, then records the owner in the CRM.",
+  "category": "Sales",
+  "tags": [
+    "events",
+    "crm",
+    "routing"
+  ],
+  "credentials": [
+    {
+      "name": "Enterprise Slack",
+      "type": "slack_webhook"
+    }
+  ],
+  "variables": [
+    {
+      "key": "CRM_API",
+      "example": "http://demo-apis:9131/crm"
+    },
+    {
+      "key": "SALES_EMAIL",
+      "example": "sales@northwind.example.com"
+    }
+  ],
+  "settings": {},
+  "definition": {
+    "schema_version": 1,
+    "nodes": [
+      {
+        "id": "lead_created",
+        "type": "trigger.event",
+        "name": "Lead created",
+        "position": {
+          "x": 0,
+          "y": 240
+        },
+        "config": {
+          "event": "lead.created",
+          "sample_payload": {
+            "event": "lead.created",
+            "payload": {
+              "lead_id": "L-301",
+              "name": "Aiko Tanaka",
+              "email": "aiko@summitworks.example.com",
+              "domain": "summitworks.example.com"
+            }
+          }
+        }
+      },
+      {
+        "id": "enrich",
+        "type": "http.request",
+        "name": "Enrich from CRM",
+        "position": {
+          "x": 280,
+          "y": 240
+        },
+        "config": {
+          "url": "{{ env.CRM_API }}/companies/{{ trigger.payload.domain }}",
+          "fail_on_http_error": false,
+          "timeout_s": 10
+        },
+        "retry": {
+          "max_attempts": 4,
+          "initial_delay_ms": 1000,
+          "max_delay_ms": 20000,
+          "multiplier": 2,
+          "jitter": true
+        }
+      },
+      {
+        "id": "segment",
+        "type": "flow.switch",
+        "name": "Route by segment",
+        "position": {
+          "x": 560,
+          "y": 240
+        },
+        "config": {
+          "value": "{{ input.body.segment }}",
+          "cases": [
+            {
+              "port": "enterprise",
+              "operator": "equals",
+              "value": "enterprise"
+            },
+            {
+              "port": "mid_market",
+              "operator": "equals",
+              "value": "mid_market"
+            }
+          ],
+          "fallback": true
+        }
+      },
+      {
+        "id": "enterprise_owner",
+        "type": "core.set",
+        "name": "Enterprise team",
+        "position": {
+          "x": 840,
+          "y": 60
+        },
+        "config": {
+          "assignments": [
+            {
+              "name": "owner",
+              "value": "enterprise-team"
+            }
+          ]
+        }
+      },
+      {
+        "id": "tell_enterprise",
+        "type": "slack.message",
+        "name": "Alert enterprise sales",
+        "position": {
+          "x": 1120,
+          "y": 60
+        },
+        "config": {
+          "credential_id": "@credential:Enterprise Slack",
+          "text": "New enterprise lead: {{ trigger.payload.name }} at {{ steps.enrich.body.name }} ({{ steps.enrich.body.employees }} people)"
+        }
+      },
+      {
+        "id": "mid_owner",
+        "type": "core.set",
+        "name": "Account executives",
+        "position": {
+          "x": 840,
+          "y": 240
+        },
+        "config": {
+          "assignments": [
+            {
+              "name": "owner",
+              "value": "account-executives"
+            }
+          ]
+        }
+      },
+      {
+        "id": "email_aes",
+        "type": "email.send",
+        "name": "Email the AEs",
+        "position": {
+          "x": 1120,
+          "y": 240
+        },
+        "config": {
+          "to": "{{ env.SALES_EMAIL }}",
+          "subject": "New lead: {{ trigger.payload.name }} ({{ steps.enrich.body.name }})",
+          "text": "{{ trigger.payload.name }} <{{ trigger.payload.email }}> from {{ steps.enrich.body.name }}, {{ steps.enrich.body.industry }}."
+        }
+      },
+      {
+        "id": "nurture",
+        "type": "core.set",
+        "name": "Nurture list",
+        "position": {
+          "x": 840,
+          "y": 420
+        },
+        "config": {
+          "assignments": [
+            {
+              "name": "owner",
+              "value": "nurture"
+            }
+          ]
+        }
+      },
+      {
+        "id": "join",
+        "type": "flow.merge",
+        "name": "Join branches",
+        "position": {
+          "x": 1400,
+          "y": 240
+        },
+        "config": {
+          "mode": "combine"
+        }
+      },
+      {
+        "id": "assign",
+        "type": "http.request",
+        "name": "Assign in CRM",
+        "position": {
+          "x": 1680,
+          "y": 240
+        },
+        "config": {
+          "method": "POST",
+          "url": "{{ env.CRM_API }}/leads/{{ trigger.payload.lead_id }}/assign",
+          "body_type": "json",
+          "body": {
+            "owner": "{{ vars.owner }}"
+          }
+        },
+        "retry": {
+          "max_attempts": 4,
+          "initial_delay_ms": 1000,
+          "max_delay_ms": 20000,
+          "multiplier": 2,
+          "jitter": true
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "lead_created-main-enrich",
+        "source": "lead_created",
+        "source_port": "main",
+        "target": "enrich",
+        "target_port": "main"
+      },
+      {
+        "id": "enrich-main-segment",
+        "source": "enrich",
+        "source_port": "main",
+        "target": "segment",
+        "target_port": "main"
+      },
+      {
+        "id": "segment-enterprise-enterprise_owner",
+        "source": "segment",
+        "source_port": "enterprise",
+        "target": "enterprise_owner",
+        "target_port": "main"
+      },
+      {
+        "id": "enterprise_owner-main-tell_enterprise",
+        "source": "enterprise_owner",
+        "source_port": "main",
+        "target": "tell_enterprise",
+        "target_port": "main"
+      },
+      {
+        "id": "tell_enterprise-main-join",
+        "source": "tell_enterprise",
+        "source_port": "main",
+        "target": "join",
+        "target_port": "main"
+      },
+      {
+        "id": "segment-mid_market-mid_owner",
+        "source": "segment",
+        "source_port": "mid_market",
+        "target": "mid_owner",
+        "target_port": "main"
+      },
+      {
+        "id": "mid_owner-main-email_aes",
+        "source": "mid_owner",
+        "source_port": "main",
+        "target": "email_aes",
+        "target_port": "main"
+      },
+      {
+        "id": "email_aes-main-join",
+        "source": "email_aes",
+        "source_port": "main",
+        "target": "join",
+        "target_port": "main"
+      },
+      {
+        "id": "segment-default-nurture",
+        "source": "segment",
+        "source_port": "default",
+        "target": "nurture",
+        "target_port": "main"
+      },
+      {
+        "id": "nurture-main-join",
+        "source": "nurture",
+        "source_port": "main",
+        "target": "join",
+        "target_port": "main"
+      },
+      {
+        "id": "join-main-assign",
+        "source": "join",
+        "source_port": "main",
+        "target": "assign",
+        "target_port": "main"
+      }
+    ]
+  }
+}

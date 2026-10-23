@@ -1,0 +1,199 @@
+{
+  "slug": "invoice-batch",
+  "name": "Charge pending invoices in batches",
+  "summary": "Every night, fetch pending invoices, charge them four at a time and report the totals.",
+  "description": "A nightly schedule pulls pending invoices from billing and charges them in batches of four through the payment gateway, which sometimes times out (the step retries). The totals go to S3 as a report and to finance by email.",
+  "category": "Finance",
+  "tags": [
+    "schedule",
+    "loop",
+    "billing"
+  ],
+  "credentials": [],
+  "variables": [
+    {
+      "key": "BILLING_API",
+      "example": "http://demo-apis:9131/billing"
+    },
+    {
+      "key": "FINANCE_EMAIL",
+      "example": "finance@northwind.example.com"
+    }
+  ],
+  "settings": {
+    "concurrency_limit": 1
+  },
+  "definition": {
+    "schema_version": 1,
+    "nodes": [
+      {
+        "id": "nightly",
+        "type": "trigger.cron",
+        "name": "Nightly at 01:30",
+        "position": {
+          "x": 0,
+          "y": 200
+        },
+        "config": {
+          "expression": "30 1 * * *",
+          "timezone": "Asia/Kolkata",
+          "overlap": "skip"
+        }
+      },
+      {
+        "id": "pending",
+        "type": "http.request",
+        "name": "Fetch pending invoices",
+        "position": {
+          "x": 280,
+          "y": 200
+        },
+        "config": {
+          "url": "{{ env.BILLING_API }}/invoices",
+          "query": [
+            {
+              "name": "status",
+              "value": "pending"
+            }
+          ]
+        },
+        "retry": {
+          "max_attempts": 4,
+          "initial_delay_ms": 1000,
+          "max_delay_ms": 20000,
+          "multiplier": 2,
+          "jitter": true
+        }
+      },
+      {
+        "id": "batches",
+        "type": "flow.loop",
+        "name": "Batches of four",
+        "position": {
+          "x": 560,
+          "y": 200
+        },
+        "config": {
+          "items": "input.body.invoices",
+          "batch_size": 4,
+          "max_items": 1000
+        }
+      },
+      {
+        "id": "charge",
+        "type": "http.request",
+        "name": "Charge the batch",
+        "position": {
+          "x": 840,
+          "y": 60
+        },
+        "config": {
+          "method": "POST",
+          "url": "{{ env.BILLING_API }}/invoices/batch",
+          "body_type": "json",
+          "body": {
+            "invoices": "{{ input.batch }}"
+          },
+          "timeout_s": 20
+        },
+        "retry": {
+          "max_attempts": 3,
+          "initial_delay_ms": 500,
+          "max_delay_ms": 5000,
+          "multiplier": 2,
+          "jitter": true
+        }
+      },
+      {
+        "id": "totals",
+        "type": "core.transform",
+        "name": "Add up",
+        "position": {
+          "x": 840,
+          "y": 340
+        },
+        "config": {
+          "expression": "{batches: input.batches, invoices: input.items, charged: sum(input.results[*].body.count)}"
+        }
+      },
+      {
+        "id": "report",
+        "type": "aws.s3_put",
+        "name": "Save the report",
+        "position": {
+          "x": 1120,
+          "y": 340
+        },
+        "config": {
+          "key": "billing/{{ format_date(now(), '%Y-%m-%d') }}.json",
+          "content": "{{ input }}"
+        }
+      },
+      {
+        "id": "email_finance",
+        "type": "email.send",
+        "name": "Email finance",
+        "position": {
+          "x": 1400,
+          "y": 340
+        },
+        "config": {
+          "to": "{{ env.FINANCE_EMAIL }}",
+          "subject": "Charged {{ steps.totals.charged }} invoices",
+          "text": "{{ steps.totals.charged }} invoices were charged in {{ steps.totals.batches }} batches. The report is s3://{{ input.bucket }}/{{ input.key }}."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "nightly-main-pending",
+        "source": "nightly",
+        "source_port": "main",
+        "target": "pending",
+        "target_port": "main"
+      },
+      {
+        "id": "pending-main-batches",
+        "source": "pending",
+        "source_port": "main",
+        "target": "batches",
+        "target_port": "main"
+      },
+      {
+        "id": "batches-batch-charge",
+        "source": "batches",
+        "source_port": "batch",
+        "target": "charge",
+        "target_port": "main"
+      },
+      {
+        "id": "charge-main-batches",
+        "source": "charge",
+        "source_port": "main",
+        "target": "batches",
+        "target_port": "loop"
+      },
+      {
+        "id": "batches-done-totals",
+        "source": "batches",
+        "source_port": "done",
+        "target": "totals",
+        "target_port": "main"
+      },
+      {
+        "id": "totals-main-report",
+        "source": "totals",
+        "source_port": "main",
+        "target": "report",
+        "target_port": "main"
+      },
+      {
+        "id": "report-main-email_finance",
+        "source": "report",
+        "source_port": "main",
+        "target": "email_finance",
+        "target_port": "main"
+      }
+    ]
+  }
+}
