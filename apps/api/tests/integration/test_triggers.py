@@ -79,6 +79,10 @@ async def test_signed_webhooks_start_executions_once_per_idempotency_key(
     assert execution["output"] == {"order": "SO-1042", "total": 129.5}
     assert execution["trigger_kind"] == "webhook"
     assert "x-signature" not in execution["trigger_payload"]["headers"]
+    # Verifying a signature counts as using the secret.
+    stored = await client.get(f"{base(owner)}/credentials", headers=owner.headers)
+    secret = next(c for c in stored.json() if c["name"] == "Hook secret orders/created")
+    assert secret["last_used_at"] is not None
     wrong_method = await client.get(url)
     assert wrong_method.status_code == 405
     unknown = await client.post(f"/hooks/{owner.workspace}/nope", content=b"{}")

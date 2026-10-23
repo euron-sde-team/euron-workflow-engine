@@ -275,20 +275,24 @@ class CredentialResolver:
                     f"The credential could not be decrypted: {exc}",
                     retryable=True,
                 ) from exc
-            await self._touch(session, credential)
+        await record_use(self.c, credential.id)
         return ResolvedCredential(credential.id, credential.type, values)
 
-    async def _touch(self, session: AsyncSession, credential: Credential) -> None:
-        try:
-            fresh = await self.c.redis.set(
-                f"cred:touched:{credential.id}", b"1", ex=_TOUCH_INTERVAL_S, nx=True
-            )
-        except RedisError:
-            return
-        if fresh:
+
+async def record_use(container: Container, credential_id: uuid.UUID) -> None:
+    """Stamp `last_used_at`, at most once per interval per credential (a Redis NX key),
+    in its own short transaction so callers' transactions are never committed early."""
+    try:
+        fresh = await container.redis.set(
+            f"cred:touched:{credential_id}", b"1", ex=_TOUCH_INTERVAL_S, nx=True
+        )
+    except RedisError:
+        return
+    if fresh:
+        async with container.db.session() as session:
             await session.execute(
                 update(Credential)
-                .where(Credential.id == credential.id)
+                .where(Credential.id == credential_id)
                 .values(last_used_at=datetime.now(UTC))
             )
             await session.commit()

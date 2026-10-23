@@ -39,7 +39,7 @@ from workflow_engine.repositories.workflows import TriggerRepository
 from workflow_engine.repositories.workspaces import WorkspaceRepository
 from workflow_engine.services.container import Container
 from workflow_engine.services.engine import Engine
-from workflow_engine.services.vault import decrypt
+from workflow_engine.services.vault import decrypt, record_use
 
 _HIDDEN_HEADERS = frozenset({"authorization", "cookie", "proxy-authorization"})
 _SECRET_TTL_S = 60.0
@@ -74,6 +74,7 @@ class WebhookService:
         credential = await CredentialRepository(self.session).get(workspace_id, credential_id)
         if credential is None or credential.type != "webhook_secret":
             raise ServiceUnavailableError("The webhook's signing secret is missing.")
+        await record_use(self.c, credential.id)
         key = (credential.id, credential.version)
         cached = _secrets.get(key)
         if cached and cached[0] > time.monotonic():
