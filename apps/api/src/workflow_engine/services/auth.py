@@ -108,6 +108,7 @@ class AuthService:
             is_admin=first_user,
         )
         await self.users.add(user)
+        await self.session.commit()
         return user
 
     async def change_password(

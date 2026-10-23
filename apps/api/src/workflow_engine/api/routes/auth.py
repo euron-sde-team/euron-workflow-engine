@@ -70,7 +70,6 @@ async def signup(
 ) -> SessionOut:
     auth = AuthService(container, session)
     user = await auth.signup(body.email, body.name, body.password)
-    await session.commit()
     await WorkspaceService(container, session).create(
         Principal(user=user), f"{user.name.split()[0]}'s workspace", "Your automations."
     )
