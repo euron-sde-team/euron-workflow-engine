@@ -50,7 +50,7 @@ function PublishForm({ workspace }: { workspace: string }) {
   }
 
   return (
-    <Card>
+    <Card className="self-start">
       <CardHeader>
         <div>
           <CardTitle>Publish an event</CardTitle>
@@ -165,7 +165,7 @@ export default function EventsPage() {
     <PageBody>
       <PageHeader
         title="Event bus"
-        description="Named events connect workflows: one publishes, every subscriber starts. System events report failures and dead letters."
+        description="Named events connect workflows: one publishes, every subscriber starts. The engine itself publishes execution.succeeded and execution.failed as runs finish."
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Card className="min-w-0 self-start overflow-hidden">
