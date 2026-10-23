@@ -77,10 +77,10 @@ export function timeline(
   const firstStart = started.length
     ? Math.min(...started.map((s) => Date.parse(s.started_at!)))
     : null;
+  // The axis starts when the execution started running (time spent queued is not part of
+  // "took"), or at its creation while it has not started yet.
   const t0 = Math.min(
-    ...[execution.started_at, execution.created_at]
-      .filter((v): v is string => Boolean(v))
-      .map(Date.parse),
+    Date.parse(execution.started_at ?? execution.created_at),
     firstStart ?? Number.POSITIVE_INFINITY,
   );
   const end = (step: StepSummary) => (step.finished_at ? Date.parse(step.finished_at) : now);

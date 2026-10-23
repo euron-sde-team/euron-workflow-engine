@@ -126,6 +126,17 @@ describe("timeline", () => {
     expect(result.rows[1]!.width).toBeCloseTo(0.5);
   });
 
+  it("starts the axis when the execution started, not when it was queued", () => {
+    const result = timeline({
+      created_at: at(-9000),
+      started_at: at(0),
+      finished_at: at(1000),
+      steps: [step({ started_at: at(0), finished_at: at(1000) })],
+    });
+    expect(result.spanMs).toBe(1000);
+    expect(result.rows[0]!.offset).toBe(0);
+  });
+
   it("keeps tiny steps visible", () => {
     const result = timeline({
       created_at: at(0),
