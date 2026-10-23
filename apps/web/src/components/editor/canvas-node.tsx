@@ -16,6 +16,7 @@ const RUN_RING: Record<string, string> = {
   running: "ring-2 ring-info/70",
   waiting: "ring-2 ring-warning/70",
   queued: "ring-2 ring-input",
+  cancelled: "ring-2 ring-subtle/40",
 };
 
 function WorkflowNodeView({ data, selected }: NodeProps<CanvasNode>) {
