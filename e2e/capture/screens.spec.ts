@@ -30,6 +30,13 @@ async function tourFrame(page: Page, holdMs = 1600): Promise<void> {
   await page.screenshot({ path: file, scale: "css" });
 }
 
+/** Hide the node palette and fit the graph to the larger canvas. */
+async function focusCanvas(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Hide nodes" }).click();
+  await page.locator(".react-flow__controls-fitview").click();
+  await page.waitForTimeout(600);
+}
+
 async function workflowId(page: Page, search: string): Promise<string> {
   const found = await apiGet<{ items: Item[] }>(
     page,
@@ -68,13 +75,17 @@ test("dashboard, workflows, editor, executions and operations", async ({ page })
   // The order workflow in the editor: the whole graph first, then the retrying HTTP node.
   await page.goto(`${base}/workflows/${await workflowId(page, "Ship paid orders")}`);
   await expect(page.getByTestId("canvas")).toBeVisible();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(600);
   await shot(page, "04-editor");
   await tourFrame(page, 2400);
 
+  await focusCanvas(page);
   await page.getByText("Create shipment", { exact: true }).click();
   await expect(page.getByTestId("inspector")).toBeVisible();
+  // The inspector narrows the canvas: fit the graph to what is left.
+  await page.locator(".react-flow__controls-fitview").click();
   await page.getByRole("tab", { name: "Settings" }).click();
+  await page.waitForTimeout(500);
   await shot(page, "05-editor-retries");
   await tourFrame(page, 2400);
 
@@ -145,6 +156,6 @@ test("dark theme", async ({ page }) => {
   await signIn(page, "owner");
   await page.goto(`/w/${WORKSPACE}/workflows/${await workflowId(page, "Daily low-stock report")}`);
   await expect(page.getByTestId("canvas")).toBeVisible();
-  await page.waitForTimeout(600);
+  await focusCanvas(page);
   await shot(page, "15-dark-editor");
 });
