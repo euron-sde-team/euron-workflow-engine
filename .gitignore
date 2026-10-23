@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+*.egg-info/
+
+# Node
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+.pnpm-store/
+
+# Environment: only the *.example files are ever committed
+.env
+.env.*
+!.env.example
+!**/.env.example
+!**/.env.aws.example
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+crash.log
+
+# Local runtime artifacts
+data/
+tmp/
+.demo/
+playwright-report/
+test-results/
+e2e/.qa/
+e2e/.capture/
+e2e/.auth/
+
+# Editors and OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+*.log
