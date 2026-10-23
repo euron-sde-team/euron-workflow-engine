@@ -11,6 +11,7 @@ import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { useCronPreview } from "@/lib/queries";
 import { defaultFor, fieldTitle, resolveRef, schemaType, unwrapNullable } from "@/lib/schema";
+import { timeZones } from "@/lib/timezones";
 import type { Credential, JsonSchema } from "@/lib/types";
 
 type FormContext = {
@@ -167,17 +168,6 @@ function CronField({
       ) : null}
     </div>
   );
-}
-
-let zones: string[] | null = null;
-function timeZones(): string[] {
-  if (!zones) {
-    const supported = (Intl as unknown as { supportedValuesOf?: (key: string) => string[] })
-      .supportedValuesOf;
-    zones = supported ? supported("timeZone") : ["UTC"];
-    if (!zones.includes("UTC")) zones = ["UTC", ...zones];
-  }
-  return zones;
 }
 
 type Row = Record<string, unknown>;
