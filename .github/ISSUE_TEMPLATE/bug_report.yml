@@ -27,7 +27,19 @@ body:
     id: area
     attributes:
       label: Area
-      options: [Editor, Triggers (webhook, schedule, event), A node, Executions and retries, Credentials, Dashboard, API, Deployment]
+      options:
+        [
+          Editor,
+          Triggers (webhook,
+          schedule,
+          event),
+          A node,
+          Executions and retries,
+          Credentials,
+          Dashboard,
+          API,
+          Deployment,
+        ]
   - type: dropdown
     id: env
     attributes:

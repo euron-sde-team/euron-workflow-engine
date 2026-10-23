@@ -13,9 +13,21 @@ import { runtimeEnv } from "@/lib/runtime-env";
 import { useLogin, useSignup, useSystemInfo } from "@/lib/queries";
 
 const FEATURES = [
-  { icon: Workflow, title: "Build on a canvas", text: "Nodes for HTTP, email, S3, SQS, Postgres and Slack. No code to deploy." },
-  { icon: RefreshCcw, title: "Runs that finish", text: "Retries with backoff, timeouts, resume from the failed step." },
-  { icon: ShieldCheck, title: "Secrets stay secret", text: "Credentials are KMS-encrypted and never shown again." },
+  {
+    icon: Workflow,
+    title: "Build on a canvas",
+    text: "Nodes for HTTP, email, S3, SQS, Postgres and Slack. No code to deploy.",
+  },
+  {
+    icon: RefreshCcw,
+    title: "Runs that finish",
+    text: "Retries with backoff, timeouts, resume from the failed step.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Secrets stay secret",
+    text: "Credentials are KMS-encrypted and never shown again.",
+  },
 ];
 
 function LoginForm() {
@@ -51,7 +63,7 @@ function LoginForm() {
         <h1 className="text-2xl font-semibold tracking-tight">
           {setup ? "Set up WorkflowEngine" : creating ? "Create your account" : "Welcome back"}
         </h1>
-        <p className="mt-1.5 text-[13.5px] text-muted-foreground">
+        <p className="text-muted-foreground mt-1.5 text-[13.5px]">
           {setup
             ? "Create the first account. It becomes the administrator of this deployment."
             : creating
@@ -62,7 +74,13 @@ function LoginForm() {
       {creating ? (
         <div className="space-y-1.5">
           <Label htmlFor="name">Name</Label>
-          <Input id="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required />
+          <Input
+            id="name"
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
         </div>
       ) : null}
       <div className="space-y-1.5">
@@ -94,11 +112,11 @@ function LoginForm() {
         {creating ? "Create account" : "Sign in"}
       </Button>
       {!setup && system.data?.allow_signup ? (
-        <p className="text-center text-[13px] text-muted-foreground">
+        <p className="text-muted-foreground text-center text-[13px]">
           {creating ? "Already have an account?" : "New here?"}{" "}
           <button
             type="button"
-            className="font-medium text-primary hover:underline"
+            className="text-primary font-medium hover:underline"
             onClick={() => setMode(creating ? "signin" : "signup")}
           >
             {creating ? "Sign in" : "Create an account"}
@@ -124,7 +142,7 @@ export default function LoginPage() {
         />
         <Wordmark name={productName} className="relative [&_span]:text-white" />
         <div className="relative max-w-md">
-          <h2 className="text-[34px] font-semibold leading-tight tracking-tight">
+          <h2 className="text-[34px] leading-tight font-semibold tracking-tight">
             Automations you can trust to finish.
           </h2>
           <p className="mt-3 text-[15px] text-white/70">

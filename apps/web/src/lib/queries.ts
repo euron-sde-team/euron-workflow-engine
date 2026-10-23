@@ -59,7 +59,8 @@ export const qk = {
   executions: (w: string, filters: ExecutionFilters) => ["executions", w, filters] as const,
   executionsAll: (w: string) => ["executions", w] as const,
   execution: (w: string, id: string) => ["execution", w, id] as const,
-  step: (w: string, executionId: string, stepId: string) => ["step", w, executionId, stepId] as const,
+  step: (w: string, executionId: string, stepId: string) =>
+    ["step", w, executionId, stepId] as const,
   logs: (w: string, executionId: string) => ["logs", w, executionId] as const,
   deadLetters: (w: string, status: string) => ["dead-letters", w, status] as const,
   credentials: (w: string) => ["credentials", w] as const,
@@ -71,14 +72,23 @@ export const qk = {
 };
 
 export type WorkflowFilters = { search?: string; tag?: string; active?: string };
-export type ExecutionFilters = { status?: string; workflow_id?: string; trigger?: string; mode?: string };
+export type ExecutionFilters = {
+  status?: string;
+  workflow_id?: string;
+  trigger?: string;
+  mode?: string;
+};
 
 const ACTIVE: ReadonlySet<string> = new Set(["queued", "running", "waiting"]);
 
 /* Session and workspace ---------------------------------------------------------------------- */
 
 export function useSystemInfo() {
-  return useQuery({ queryKey: qk.system, queryFn: () => api<SystemInfo>("/api/v1/system/info"), staleTime: 300_000 });
+  return useQuery({
+    queryKey: qk.system,
+    queryFn: () => api<SystemInfo>("/api/v1/system/info"),
+    staleTime: 300_000,
+  });
 }
 
 export function useMe() {
@@ -112,7 +122,10 @@ export function useLogout() {
 }
 
 export function useWorkspace(workspace: string) {
-  return useQuery({ queryKey: qk.workspace(workspace), queryFn: () => api<Workspace>(ws(workspace)) });
+  return useQuery({
+    queryKey: qk.workspace(workspace),
+    queryFn: () => api<Workspace>(ws(workspace)),
+  });
 }
 
 export function useCreateWorkspace() {
@@ -149,7 +162,11 @@ export function canEdit(role: Role | undefined): boolean {
 /* Catalog ---------------------------------------------------------------------------------------- */
 
 export function useNodeTypes() {
-  return useQuery({ queryKey: qk.nodeTypes, queryFn: () => api<NodeType[]>("/api/v1/node-types"), staleTime: Infinity });
+  return useQuery({
+    queryKey: qk.nodeTypes,
+    queryFn: () => api<NodeType[]>("/api/v1/node-types"),
+    staleTime: Infinity,
+  });
 }
 
 export function useCredentialTypes() {
@@ -161,7 +178,11 @@ export function useCredentialTypes() {
 }
 
 export function useTemplates() {
-  return useQuery({ queryKey: qk.templates, queryFn: () => api<TemplateSummary[]>("/api/v1/templates"), staleTime: 300_000 });
+  return useQuery({
+    queryKey: qk.templates,
+    queryFn: () => api<TemplateSummary[]>("/api/v1/templates"),
+    staleTime: 300_000,
+  });
 }
 
 export function useTemplate(slug: string | null) {
@@ -211,8 +232,13 @@ export function useWorkflow(workspace: string, id: string) {
 export function useCreateWorkflow(workspace: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name: string; description?: string; tags?: string[]; template?: string; definition?: Definition }) =>
-      api<Workflow>(`${ws(workspace)}/workflows`, { method: "POST", json: body }),
+    mutationFn: (body: {
+      name: string;
+      description?: string;
+      tags?: string[];
+      template?: string;
+      definition?: Definition;
+    }) => api<Workflow>(`${ws(workspace)}/workflows`, { method: "POST", json: body }),
     onSuccess: () => client.invalidateQueries({ queryKey: qk.workflowsAll(workspace) }),
   });
 }
@@ -241,7 +267,10 @@ export function useSaveDraft(workspace: string, id: string) {
 export function useValidate(workspace: string, id: string) {
   return useMutation({
     mutationFn: (definition: Definition) =>
-      api<Issue[]>(`${ws(workspace)}/workflows/${id}/validate`, { method: "POST", json: { definition } }),
+      api<Issue[]>(`${ws(workspace)}/workflows/${id}/validate`, {
+        method: "POST",
+        json: { definition },
+      }),
   });
 }
 
@@ -279,7 +308,8 @@ export function useWorkflowActions(workspace: string, id: string) {
       onSuccess: refresh,
     }),
     restore: useMutation({
-      mutationFn: (number: number) => api<Workflow>(`${base}/versions/${number}/restore`, { method: "POST" }),
+      mutationFn: (number: number) =>
+        api<Workflow>(`${base}/versions/${number}/restore`, { method: "POST" }),
       onSuccess: refresh,
     }),
     duplicate: useMutation({
@@ -324,7 +354,12 @@ export function useTestNode(workspace: string) {
 
 /* Executions ------------------------------------------------------------------------------------ */
 
-export function useExecutions(workspace: string, filters: ExecutionFilters, cursor: string | null, limit = 25) {
+export function useExecutions(
+  workspace: string,
+  filters: ExecutionFilters,
+  cursor: string | null,
+  limit = 25,
+) {
   const params = new URLSearchParams({ limit: String(limit) });
   for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value);
   if (cursor) params.set("cursor", cursor);
@@ -332,7 +367,8 @@ export function useExecutions(workspace: string, filters: ExecutionFilters, curs
     queryKey: [...qk.executions(workspace, { ...filters }), cursor ?? "first"],
     queryFn: () => api<CursorPage<ExecutionSummary>>(`${ws(workspace)}/executions?${params}`),
     // Keep the list live while anything on the page is still moving.
-    refetchInterval: (query) => (query.state.data?.items.some((e) => ACTIVE.has(e.status)) ? 2000 : 10_000),
+    refetchInterval: (query) =>
+      query.state.data?.items.some((e) => ACTIVE.has(e.status)) ? 2000 : 10_000,
   });
 }
 
@@ -341,7 +377,8 @@ export function useExecution(workspace: string, id: string | null) {
     queryKey: qk.execution(workspace, id ?? "none"),
     queryFn: () => api<Execution>(`${ws(workspace)}/executions/${id}`),
     enabled: Boolean(id),
-    refetchInterval: (query) => (query.state.data && ACTIVE.has(query.state.data.status) ? 1000 : false),
+    refetchInterval: (query) =>
+      query.state.data && ACTIVE.has(query.state.data.status) ? 1000 : false,
   });
 }
 
@@ -354,7 +391,12 @@ export function useExecutionDefinition(workspace: string, id: string) {
   });
 }
 
-export function useStep(workspace: string, executionId: string, stepId: string | null, live = false) {
+export function useStep(
+  workspace: string,
+  executionId: string,
+  stepId: string | null,
+  live = false,
+) {
   return useQuery({
     queryKey: qk.step(workspace, executionId, stepId ?? "none"),
     queryFn: () => api<StepDetail>(`${ws(workspace)}/executions/${executionId}/steps/${stepId}`),
@@ -380,9 +422,18 @@ export function useExecutionActions(workspace: string, id: string) {
   };
   const base = `${ws(workspace)}/executions/${id}`;
   return {
-    cancel: useMutation({ mutationFn: () => api<ExecutionSummary>(`${base}/cancel`, { method: "POST" }), onSuccess: refresh }),
-    resume: useMutation({ mutationFn: () => api<ExecutionSummary>(`${base}/resume`, { method: "POST" }), onSuccess: refresh }),
-    retry: useMutation({ mutationFn: () => api<RunResult>(`${base}/retry`, { method: "POST" }), onSuccess: refresh }),
+    cancel: useMutation({
+      mutationFn: () => api<ExecutionSummary>(`${base}/cancel`, { method: "POST" }),
+      onSuccess: refresh,
+    }),
+    resume: useMutation({
+      mutationFn: () => api<ExecutionSummary>(`${base}/resume`, { method: "POST" }),
+      onSuccess: refresh,
+    }),
+    retry: useMutation({
+      mutationFn: () => api<RunResult>(`${base}/retry`, { method: "POST" }),
+      onSuccess: refresh,
+    }),
   };
 }
 
@@ -391,7 +442,8 @@ export function useExecutionActions(workspace: string, id: string) {
 export function useDeadLetters(workspace: string, status: string) {
   return useQuery({
     queryKey: qk.deadLetters(workspace, status),
-    queryFn: () => api<CursorPage<DeadLetter>>(`${ws(workspace)}/dead-letters?status=${status}&limit=100`),
+    queryFn: () =>
+      api<CursorPage<DeadLetter>>(`${ws(workspace)}/dead-letters?status=${status}&limit=100`),
   });
 }
 
@@ -403,11 +455,13 @@ export function useDeadLetterActions(workspace: string) {
   };
   return {
     retry: useMutation({
-      mutationFn: (id: string) => api<ExecutionSummary>(`${ws(workspace)}/dead-letters/${id}/retry`, { method: "POST" }),
+      mutationFn: (id: string) =>
+        api<ExecutionSummary>(`${ws(workspace)}/dead-letters/${id}/retry`, { method: "POST" }),
       onSuccess: refresh,
     }),
     discard: useMutation({
-      mutationFn: (id: string) => api<DeadLetter>(`${ws(workspace)}/dead-letters/${id}/discard`, { method: "POST" }),
+      mutationFn: (id: string) =>
+        api<DeadLetter>(`${ws(workspace)}/dead-letters/${id}/discard`, { method: "POST" }),
       onSuccess: refresh,
     }),
   };
@@ -416,7 +470,10 @@ export function useDeadLetterActions(workspace: string) {
 /* Credentials and variables ------------------------------------------------------------------------ */
 
 export function useCredentials(workspace: string) {
-  return useQuery({ queryKey: qk.credentials(workspace), queryFn: () => api<Credential[]>(`${ws(workspace)}/credentials`) });
+  return useQuery({
+    queryKey: qk.credentials(workspace),
+    queryFn: () => api<Credential[]>(`${ws(workspace)}/credentials`),
+  });
 }
 
 export function useCredentialActions(workspace: string) {
@@ -424,24 +481,39 @@ export function useCredentialActions(workspace: string) {
   const refresh = () => client.invalidateQueries({ queryKey: qk.credentials(workspace) });
   return {
     create: useMutation({
-      mutationFn: (body: { name: string; type: string; description: string; data: Record<string, unknown> }) =>
-        api<Credential>(`${ws(workspace)}/credentials`, { method: "POST", json: body }),
+      mutationFn: (body: {
+        name: string;
+        type: string;
+        description: string;
+        data: Record<string, unknown>;
+      }) => api<Credential>(`${ws(workspace)}/credentials`, { method: "POST", json: body }),
       onSuccess: refresh,
     }),
     update: useMutation({
-      mutationFn: ({ id, ...body }: { id: string; name?: string; description?: string; data?: Record<string, unknown> }) =>
-        api<Credential>(`${ws(workspace)}/credentials/${id}`, { method: "PATCH", json: body }),
+      mutationFn: ({
+        id,
+        ...body
+      }: {
+        id: string;
+        name?: string;
+        description?: string;
+        data?: Record<string, unknown>;
+      }) => api<Credential>(`${ws(workspace)}/credentials/${id}`, { method: "PATCH", json: body }),
       onSuccess: refresh,
     }),
     remove: useMutation({
-      mutationFn: (id: string) => api<void>(`${ws(workspace)}/credentials/${id}`, { method: "DELETE" }),
+      mutationFn: (id: string) =>
+        api<void>(`${ws(workspace)}/credentials/${id}`, { method: "DELETE" }),
       onSuccess: refresh,
     }),
   };
 }
 
 export function useVariables(workspace: string) {
-  return useQuery({ queryKey: qk.variables(workspace), queryFn: () => api<Variable[]>(`${ws(workspace)}/variables`) });
+  return useQuery({
+    queryKey: qk.variables(workspace),
+    queryFn: () => api<Variable[]>(`${ws(workspace)}/variables`),
+  });
 }
 
 export function useVariableActions(workspace: string) {
@@ -454,7 +526,8 @@ export function useVariableActions(workspace: string) {
       onSuccess: refresh,
     }),
     remove: useMutation({
-      mutationFn: (key: string) => api<void>(`${ws(workspace)}/variables/${key}`, { method: "DELETE" }),
+      mutationFn: (key: string) =>
+        api<void>(`${ws(workspace)}/variables/${key}`, { method: "DELETE" }),
       onSuccess: refresh,
     }),
   };
@@ -490,7 +563,10 @@ export function usePublishEvent(workspace: string) {
 /* People, keys and audit ------------------------------------------------------------------------- */
 
 export function useMembers(workspace: string) {
-  return useQuery({ queryKey: qk.members(workspace), queryFn: () => api<Member[]>(`${ws(workspace)}/members`) });
+  return useQuery({
+    queryKey: qk.members(workspace),
+    queryFn: () => api<Member[]>(`${ws(workspace)}/members`),
+  });
 }
 
 export function useMemberActions(workspace: string) {
@@ -511,14 +587,19 @@ export function useMemberActions(workspace: string) {
       onSuccess: refresh,
     }),
     remove: useMutation({
-      mutationFn: (userId: string) => api<void>(`${ws(workspace)}/members/${userId}`, { method: "DELETE" }),
+      mutationFn: (userId: string) =>
+        api<void>(`${ws(workspace)}/members/${userId}`, { method: "DELETE" }),
       onSuccess: refresh,
     }),
   };
 }
 
 export function useApiKeys(workspace: string, enabled = true) {
-  return useQuery({ queryKey: qk.apiKeys(workspace), queryFn: () => api<ApiKey[]>(`${ws(workspace)}/api-keys`), enabled });
+  return useQuery({
+    queryKey: qk.apiKeys(workspace),
+    queryFn: () => api<ApiKey[]>(`${ws(workspace)}/api-keys`),
+    enabled,
+  });
 }
 
 export function useApiKeyActions(workspace: string) {
@@ -526,12 +607,16 @@ export function useApiKeyActions(workspace: string) {
   const refresh = () => client.invalidateQueries({ queryKey: qk.apiKeys(workspace) });
   return {
     create: useMutation({
-      mutationFn: (body: { name: string; role: "viewer" | "editor"; expires_in_days: number | null }) =>
-        api<ApiKeyCreated>(`${ws(workspace)}/api-keys`, { method: "POST", json: body }),
+      mutationFn: (body: {
+        name: string;
+        role: "viewer" | "editor";
+        expires_in_days: number | null;
+      }) => api<ApiKeyCreated>(`${ws(workspace)}/api-keys`, { method: "POST", json: body }),
       onSuccess: refresh,
     }),
     revoke: useMutation({
-      mutationFn: (id: string) => api<void>(`${ws(workspace)}/api-keys/${id}`, { method: "DELETE" }),
+      mutationFn: (id: string) =>
+        api<void>(`${ws(workspace)}/api-keys/${id}`, { method: "DELETE" }),
       onSuccess: refresh,
     }),
   };

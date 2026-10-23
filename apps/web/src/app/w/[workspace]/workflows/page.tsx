@@ -1,6 +1,14 @@
 "use client";
 
-import { CalendarClock, Hand, RadioTower, Search, Timer, Webhook, Workflow as WorkflowIcon } from "lucide-react";
+import {
+  CalendarClock,
+  Hand,
+  RadioTower,
+  Search,
+  Timer,
+  Webhook,
+  Workflow as WorkflowIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useDeferredValue, useState } from "react";
@@ -37,10 +45,15 @@ function SuccessRate({ workflow }: { workflow: WorkflowSummary }) {
   if (!stats.total) return <span className="text-subtle">-</span>;
   const rate = stats.success_rate;
   return (
-    <Tooltip content={`${stats.succeeded} succeeded, ${stats.failed} failed of ${stats.total} in 7 days`}>
+    <Tooltip
+      content={`${stats.succeeded} succeeded, ${stats.failed} failed of ${stats.total} in 7 days`}
+    >
       <span className="inline-flex items-center gap-2">
-        <span className="h-1.5 w-14 overflow-hidden rounded-full bg-muted">
-          <span className="block h-full rounded-full bg-success" style={{ width: `${(rate ?? 0) * 100}%` }} />
+        <span className="bg-muted h-1.5 w-14 overflow-hidden rounded-full">
+          <span
+            className="bg-success block h-full rounded-full"
+            style={{ width: `${(rate ?? 0) * 100}%` }}
+          />
         </span>
         <span className="tabular-nums">{rate === null ? "-" : formatPercent(rate)}</span>
       </span>
@@ -74,15 +87,33 @@ export default function WorkflowsPage() {
       />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative min-w-56 flex-1 sm:max-w-sm">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle" aria-hidden />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search workflows" className="pl-9" aria-label="Search workflows" />
+          <Search
+            className="text-subtle pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            aria-hidden
+          />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search workflows"
+            className="pl-9"
+            aria-label="Search workflows"
+          />
         </div>
-        <NativeSelect value={active} onChange={(e) => setActive(e.target.value)} className="w-40" aria-label="Filter by state">
+        <NativeSelect
+          value={active}
+          onChange={(e) => setActive(e.target.value)}
+          className="w-40"
+          aria-label="Filter by state"
+        >
           <option value="">All workflows</option>
           <option value="true">Active</option>
           <option value="false">Not active</option>
         </NativeSelect>
-        {workflows.data ? <span className="ml-auto text-[12.5px] text-muted-foreground">{workflows.data.total} workflows</span> : null}
+        {workflows.data ? (
+          <span className="text-muted-foreground ml-auto text-[12.5px]">
+            {workflows.data.total} workflows
+          </span>
+        ) : null}
       </div>
       {workflows.error ? <ErrorNotice message={workflows.error.message} /> : null}
       {!items ? (
@@ -104,7 +135,7 @@ export default function WorkflowsPage() {
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[46rem] text-[13px]">
-              <thead className="border-b border-border bg-muted/50 text-left text-[11.5px] uppercase tracking-wide text-subtle">
+              <thead className="border-border bg-muted/50 text-subtle border-b text-left text-[11.5px] tracking-wide uppercase">
                 <tr>
                   <th className="px-4 py-2.5 font-medium">Workflow</th>
                   <th className="px-3 py-2.5 font-medium">Triggers</th>
@@ -114,14 +145,20 @@ export default function WorkflowsPage() {
                   <th className="px-4 py-2.5 font-medium">Next run</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-border divide-y">
                 {items.map((workflow) => (
-                  <tr key={workflow.id} className="transition-colors hover:bg-muted/40">
+                  <tr key={workflow.id} className="hover:bg-muted/40 transition-colors">
                     <td className="max-w-[22rem] px-4 py-3">
-                      <Link href={`/w/${workspace}/workflows/${workflow.id}`} className="block font-medium hover:text-primary" data-testid="workflow-link">
+                      <Link
+                        href={`/w/${workspace}/workflows/${workflow.id}`}
+                        className="hover:text-primary block font-medium"
+                        data-testid="workflow-link"
+                      >
                         {workflow.name}
                       </Link>
-                      <span className="mt-0.5 block truncate text-[12px] text-muted-foreground">{workflow.description || "No description"}</span>
+                      <span className="text-muted-foreground mt-0.5 block truncate text-[12px]">
+                        {workflow.description || "No description"}
+                      </span>
                       {workflow.tags.length ? (
                         <span className="mt-1 flex flex-wrap gap-1">
                           {workflow.tags.map((tag) => (
@@ -133,7 +170,7 @@ export default function WorkflowsPage() {
                       ) : null}
                     </td>
                     <td className="px-3 py-3">
-                      <span className="flex gap-1.5 text-muted-foreground">
+                      <span className="text-muted-foreground flex gap-1.5">
                         {workflow.trigger_kinds.map((kind) => {
                           const Icon = TRIGGER_ICONS[kind] ?? Hand;
                           return (
@@ -148,7 +185,7 @@ export default function WorkflowsPage() {
                       <span className="flex flex-col items-start gap-1">
                         <StateBadge workflow={workflow} />
                         {workflow.published_version ? (
-                          <span className="text-[11.5px] text-muted-foreground">
+                          <span className="text-muted-foreground text-[11.5px]">
                             v{workflow.published_version}
                             {workflow.has_unpublished_changes ? ", draft changed" : ""}
                           </span>
@@ -157,7 +194,10 @@ export default function WorkflowsPage() {
                     </td>
                     <td className="px-3 py-3">
                       {workflow.last_execution ? (
-                        <Link href={`/w/${workspace}/executions/${workflow.last_execution.id}`} className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                        <Link
+                          href={`/w/${workspace}/executions/${workflow.last_execution.id}`}
+                          className="text-muted-foreground hover:text-foreground flex items-center gap-2"
+                        >
                           <StatusDot status={workflow.last_execution.status} />
                           {formatRelative(workflow.last_execution.created_at)}
                         </Link>
@@ -168,7 +208,13 @@ export default function WorkflowsPage() {
                     <td className="px-3 py-3">
                       <SuccessRate workflow={workflow} />
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{workflow.next_run_at ? formatRelative(workflow.next_run_at) : <span className="text-subtle">-</span>}</td>
+                    <td className="text-muted-foreground px-4 py-3">
+                      {workflow.next_run_at ? (
+                        formatRelative(workflow.next_run_at)
+                      ) : (
+                        <span className="text-subtle">-</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

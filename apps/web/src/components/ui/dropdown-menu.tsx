@@ -18,7 +18,7 @@ export function DropdownMenuContent({
       <Menu.Content
         sideOffset={sideOffset}
         className={cn(
-          "z-50 min-w-48 overflow-hidden rounded-xl border border-border bg-card p-1 text-sm shadow-md data-[state=open]:animate-fade-in",
+          "border-border bg-card data-[state=open]:animate-fade-in z-50 min-w-48 overflow-hidden rounded-xl border p-1 text-sm shadow-md",
           className,
         )}
         {...props}
@@ -35,7 +35,7 @@ export function DropdownMenuItem({
   return (
     <Menu.Item
       className={cn(
-        "flex cursor-pointer select-none items-center gap-2 rounded-lg px-2.5 py-1.5 outline-none transition-colors data-[disabled]:pointer-events-none data-[highlighted]:bg-muted data-[disabled]:opacity-50 [&_svg]:size-4 [&_svg]:text-muted-foreground",
+        "data-[highlighted]:bg-muted [&_svg]:text-muted-foreground flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 transition-colors outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:size-4",
         destructive && "text-danger [&_svg]:text-danger",
         className,
       )}
@@ -45,9 +45,17 @@ export function DropdownMenuItem({
 }
 
 export function DropdownMenuLabel({ className, ...props }: ComponentProps<typeof Menu.Label>) {
-  return <Menu.Label className={cn("px-2.5 py-1.5 text-xs text-muted-foreground", className)} {...props} />;
+  return (
+    <Menu.Label
+      className={cn("text-muted-foreground px-2.5 py-1.5 text-xs", className)}
+      {...props}
+    />
+  );
 }
 
-export function DropdownMenuSeparator({ className, ...props }: ComponentProps<typeof Menu.Separator>) {
-  return <Menu.Separator className={cn("my-1 h-px bg-border", className)} {...props} />;
+export function DropdownMenuSeparator({
+  className,
+  ...props
+}: ComponentProps<typeof Menu.Separator>) {
+  return <Menu.Separator className={cn("bg-border my-1 h-px", className)} {...props} />;
 }

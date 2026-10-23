@@ -73,8 +73,20 @@ describe("timeline", () => {
       started_at: at(0),
       finished_at: at(1000),
       steps: [
-        step({ id: "2", node_id: "second", node_name: "Second", started_at: at(500), finished_at: at(1000) }),
-        step({ id: "1", node_id: "first", node_name: "First", started_at: at(0), finished_at: at(500) }),
+        step({
+          id: "2",
+          node_id: "second",
+          node_name: "Second",
+          started_at: at(500),
+          finished_at: at(1000),
+        }),
+        step({
+          id: "1",
+          node_id: "first",
+          node_name: "First",
+          started_at: at(0),
+          finished_at: at(500),
+        }),
         step({ id: "s", status: "skipped" }),
       ],
     });
@@ -95,12 +107,22 @@ describe("timeline", () => {
         steps: [
           step({ node_name: "Poll", run_index: 0, started_at: at(0), finished_at: at(100) }),
           step({ node_name: "Poll", run_index: 1, started_at: at(100), status: "running" }),
-          step({ node_name: "Batch", node_id: "b", scope: "/loop:1", started_at: at(150), finished_at: at(160) }),
+          step({
+            node_name: "Batch",
+            node_id: "b",
+            scope: "/loop:1",
+            started_at: at(150),
+            finished_at: at(160),
+          }),
         ],
       },
       base + 200,
     );
-    expect(result.rows.map((r) => r.label)).toEqual(["Poll, run 1", "Poll, run 2", "Batch, pass 2"]);
+    expect(result.rows.map((r) => r.label)).toEqual([
+      "Poll, run 1",
+      "Poll, run 2",
+      "Batch, pass 2",
+    ]);
     expect(result.rows[1]!.width).toBeCloseTo(0.5);
   });
 

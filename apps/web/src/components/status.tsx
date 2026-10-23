@@ -15,7 +15,10 @@ import type { ExecutionStatus, StepStatus } from "@/lib/types";
 
 type Tone = "neutral" | "primary" | "success" | "warning" | "danger" | "outline" | "info";
 
-export const STATUS: Record<ExecutionStatus | StepStatus, { label: string; tone: Tone; icon: LucideIcon }> = {
+export const STATUS: Record<
+  ExecutionStatus | StepStatus,
+  { label: string; tone: Tone; icon: LucideIcon }
+> = {
   succeeded: { label: "Succeeded", tone: "success", icon: CheckCircle2 },
   failed: { label: "Failed", tone: "danger", icon: XCircle },
   running: { label: "Running", tone: "info", icon: Loader2 },
@@ -25,7 +28,13 @@ export const STATUS: Record<ExecutionStatus | StepStatus, { label: string; tone:
   skipped: { label: "Skipped", tone: "outline", icon: MinusCircle },
 };
 
-export function StatusBadge({ status, className }: { status: ExecutionStatus | StepStatus; className?: string }) {
+export function StatusBadge({
+  status,
+  className,
+}: {
+  status: ExecutionStatus | StepStatus;
+  className?: string;
+}) {
   const { label, tone, icon: Icon } = STATUS[status];
   return (
     <Badge tone={tone} className={className}>
@@ -36,7 +45,13 @@ export function StatusBadge({ status, className }: { status: ExecutionStatus | S
 }
 
 /** A coloured dot for dense lists and the canvas. */
-export function StatusDot({ status, className }: { status: ExecutionStatus | StepStatus; className?: string }) {
+export function StatusDot({
+  status,
+  className,
+}: {
+  status: ExecutionStatus | StepStatus;
+  className?: string;
+}) {
   const color: Record<string, string> = {
     succeeded: "bg-success",
     failed: "bg-danger",
@@ -46,5 +61,10 @@ export function StatusDot({ status, className }: { status: ExecutionStatus | Ste
     cancelled: "bg-subtle",
     skipped: "bg-input",
   };
-  return <span className={cn("inline-block size-2 shrink-0 rounded-full", color[status], className)} aria-hidden />;
+  return (
+    <span
+      className={cn("inline-block size-2 shrink-0 rounded-full", color[status], className)}
+      aria-hidden
+    />
+  );
 }

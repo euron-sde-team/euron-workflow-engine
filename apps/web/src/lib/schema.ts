@@ -9,7 +9,10 @@ export function resolveRef(schema: JsonSchema, root: JsonSchema): JsonSchema {
 }
 
 /** Pydantic writes `X | None` as anyOf [X, null]; editors want X and a "nullable" flag. */
-export function unwrapNullable(schema: JsonSchema, root: JsonSchema): { schema: JsonSchema; nullable: boolean } {
+export function unwrapNullable(
+  schema: JsonSchema,
+  root: JsonSchema,
+): { schema: JsonSchema; nullable: boolean } {
   const resolved = resolveRef(schema, root);
   const options = resolved.anyOf;
   if (!options) return { schema: resolved, nullable: false };

@@ -25,7 +25,8 @@ const mono = "font-mono text-[12.5px]";
 
 function issueFor(issues: Map<string, string>, path: string): string | undefined {
   for (const [field, message] of issues) {
-    if (field === path || field.startsWith(`${path}.`) || field.startsWith(`${path}[`)) return message;
+    if (field === path || field.startsWith(`${path}.`) || field.startsWith(`${path}[`))
+      return message;
   }
   return undefined;
 }
@@ -48,12 +49,14 @@ function FieldShell({
   inline?: boolean;
 }) {
   return (
-    <div className={cn("space-y-1.5", inline && "flex items-center justify-between gap-3 space-y-0")}>
+    <div
+      className={cn("space-y-1.5", inline && "flex items-center justify-between gap-3 space-y-0")}
+    >
       <div className="flex items-center gap-1.5">
         <Label htmlFor={id}>{label}</Label>
         {template ? (
           <span
-            className="inline-flex items-center gap-0.5 rounded bg-accent px-1 text-[10.5px] font-medium text-accent-foreground"
+            className="bg-accent text-accent-foreground inline-flex items-center gap-0.5 rounded px-1 text-[10.5px] font-medium"
             title="Accepts {{ expressions }}"
           >
             <Braces className="size-3" aria-hidden />
@@ -64,7 +67,7 @@ function FieldShell({
       {children}
       {description && !inline ? <FieldHint>{description}</FieldHint> : null}
       {error ? (
-        <p className="text-xs font-medium text-danger" role="alert">
+        <p className="text-danger text-xs font-medium" role="alert">
           {error}
         </p>
       ) : null}
@@ -87,7 +90,9 @@ function JsonField({
   rows?: number;
 }) {
   // The inspector remounts for every node, so the text only needs its initial value here.
-  const [text, setText] = useState(() => (value === undefined ? "" : JSON.stringify(value, null, 2)));
+  const [text, setText] = useState(() =>
+    value === undefined ? "" : JSON.stringify(value, null, 2),
+  );
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -102,7 +107,9 @@ function JsonField({
         onChange={(event) => {
           setText(event.target.value);
           try {
-            const parsed: unknown = event.target.value.trim() ? JSON.parse(event.target.value) : null;
+            const parsed: unknown = event.target.value.trim()
+              ? JSON.parse(event.target.value)
+              : null;
             setError(null);
             onChange(parsed);
           } catch (exc) {
@@ -110,7 +117,7 @@ function JsonField({
           }
         }}
       />
-      {error ? <p className="text-xs text-danger">JSON: {error}</p> : null}
+      {error ? <p className="text-danger text-xs">JSON: {error}</p> : null}
     </div>
   );
 }
@@ -138,15 +145,24 @@ function CronField({
   const result = preview.data;
   return (
     <div className="space-y-1.5">
-      <Input id={id} className={mono} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} placeholder="0 8 * * MON-FRI" />
+      <Input
+        id={id}
+        className={mono}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="0 8 * * MON-FRI"
+      />
       {result ? (
         result.valid ? (
-          <p className="text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">{result.description}</span>
-            {result.next.length ? `; next runs ${result.next.map(formatDateTime).join(", ")}` : null}
+          <p className="text-muted-foreground text-xs">
+            <span className="text-foreground font-medium">{result.description}</span>
+            {result.next.length
+              ? `; next runs ${result.next.map(formatDateTime).join(", ")}`
+              : null}
           </p>
         ) : (
-          <p className="text-xs text-danger">{result.error}</p>
+          <p className="text-danger text-xs">{result.error}</p>
         )
       ) : null}
     </div>
@@ -156,7 +172,8 @@ function CronField({
 let zones: string[] | null = null;
 function timeZones(): string[] {
   if (!zones) {
-    const supported = (Intl as unknown as { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf;
+    const supported = (Intl as unknown as { supportedValuesOf?: (key: string) => string[] })
+      .supportedValuesOf;
     zones = supported ? supported("timeZone") : ["UTC"];
     if (!zones.includes("UTC")) zones = ["UTC", ...zones];
   }
@@ -184,11 +201,15 @@ function RowList({
 }) {
   return (
     <div className="space-y-2">
-      {rows.length === 0 ? <p className="text-xs text-subtle">{empty}</p> : null}
+      {rows.length === 0 ? <p className="text-subtle text-xs">{empty}</p> : null}
       {rows.map((row, index) => (
         <div key={index} className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
-            {render(row, (patch) => onChange(rows.map((r, i) => (i === index ? { ...r, ...patch } : r))), index)}
+            {render(
+              row,
+              (patch) => onChange(rows.map((r, i) => (i === index ? { ...r, ...patch } : r))),
+              index,
+            )}
           </div>
           <Button
             type="button"
@@ -202,7 +223,13 @@ function RowList({
           </Button>
         </div>
       ))}
-      <Button type="button" variant="secondary" size="sm" disabled={disabled} onClick={() => onChange([...rows, make()])}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        disabled={disabled}
+        onClick={() => onChange([...rows, make()])}
+      >
         <Plus /> {addLabel}
       </Button>
     </div>
@@ -261,7 +288,14 @@ function Field({
   const type = schemaType(schema);
   const disabled = ctx.readOnly;
   const shell = (children: ReactNode, inline = false) => (
-    <FieldShell id={id} label={label} description={description} template={template} error={error} inline={inline}>
+    <FieldShell
+      id={id}
+      label={label}
+      description={description}
+      template={template}
+      error={error}
+      inline={inline}
+    >
       {children}
     </FieldShell>
   );
@@ -271,7 +305,12 @@ function Field({
     const options = ctx.credentials.filter((c) => accepted.includes(c.type));
     return shell(
       <div className="space-y-1">
-        <NativeSelect id={id} value={textOf(value)} disabled={disabled} onChange={(e) => onChange(e.target.value || null)}>
+        <NativeSelect
+          id={id}
+          value={textOf(value)}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value || null)}
+        >
           <option value="">{nullable ? "None" : "Choose a credential"}</option>
           {options.map((credential) => (
             <option key={credential.id} value={credential.id}>
@@ -280,9 +319,12 @@ function Field({
           ))}
         </NativeSelect>
         {options.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             No {accepted.join(" or ")} credential yet.{" "}
-            <Link href={`/w/${ctx.workspace}/credentials`} className="font-medium text-primary hover:underline">
+            <Link
+              href={`/w/${ctx.workspace}/credentials`}
+              className="text-primary font-medium hover:underline"
+            >
               Add one
             </Link>
           </p>
@@ -303,7 +345,12 @@ function Field({
   }
   if (widget === "timezone") {
     return shell(
-      <NativeSelect id={id} value={textOf(value) || "UTC"} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+      <NativeSelect
+        id={id}
+        value={textOf(value) || "UTC"}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+      >
         {timeZones().map((zone) => (
           <option key={zone} value={zone}>
             {zone}
@@ -323,8 +370,22 @@ function Field({
         make={() => ({ name: "", value: "" })}
         render={(row, update) => (
           <div className="grid grid-cols-2 gap-2">
-            <Input aria-label="Name" placeholder="Name" className={mono} value={textOf(row.name)} disabled={disabled} onChange={(e) => update({ name: e.target.value })} />
-            <Input aria-label="Value" placeholder="Value or {{ template }}" className={mono} value={textOf(row.value)} disabled={disabled} onChange={(e) => update({ value: e.target.value })} />
+            <Input
+              aria-label="Name"
+              placeholder="Name"
+              className={mono}
+              value={textOf(row.name)}
+              disabled={disabled}
+              onChange={(e) => update({ name: e.target.value })}
+            />
+            <Input
+              aria-label="Value"
+              placeholder="Value or {{ template }}"
+              className={mono}
+              value={textOf(row.value)}
+              disabled={disabled}
+              onChange={(e) => update({ value: e.target.value })}
+            />
           </div>
         )}
       />,
@@ -341,8 +402,22 @@ function Field({
         make={() => ({ name: "", value: "" })}
         render={(row, update) => (
           <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2">
-            <Input aria-label="Variable name" placeholder="name" className={mono} value={textOf(row.name)} disabled={disabled} onChange={(e) => update({ name: e.target.value })} />
-            <Input aria-label="Value" placeholder="{{ input.total }}" className={mono} value={textOf(row.value)} disabled={disabled} onChange={(e) => update({ value: looseValue(e.target.value) })} />
+            <Input
+              aria-label="Variable name"
+              placeholder="name"
+              className={mono}
+              value={textOf(row.name)}
+              disabled={disabled}
+              onChange={(e) => update({ name: e.target.value })}
+            />
+            <Input
+              aria-label="Value"
+              placeholder="{{ input.total }}"
+              className={mono}
+              value={textOf(row.value)}
+              disabled={disabled}
+              onChange={(e) => update({ value: looseValue(e.target.value) })}
+            />
           </div>
         )}
       />,
@@ -358,15 +433,38 @@ function Field({
         disabled={disabled}
         empty={isCases ? "Add a case for each output." : "Add a condition."}
         addLabel={isCases ? "Add case" : "Add condition"}
-        make={() => (isCases ? { port: "", operator: "equals", value: "" } : { left: "", operator: "equals", right: "" })}
+        make={() =>
+          isCases
+            ? { port: "", operator: "equals", value: "" }
+            : { left: "", operator: "equals", right: "" }
+        }
         render={(row, update) => (
           <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1.2fr)] gap-2">
             {isCases ? (
-              <Input aria-label="Output name" placeholder="output" className={mono} value={textOf(row.port)} disabled={disabled} onChange={(e) => update({ port: e.target.value })} />
+              <Input
+                aria-label="Output name"
+                placeholder="output"
+                className={mono}
+                value={textOf(row.port)}
+                disabled={disabled}
+                onChange={(e) => update({ port: e.target.value })}
+              />
             ) : (
-              <Input aria-label="Value to test" placeholder="{{ input.total }}" className={mono} value={textOf(row.left)} disabled={disabled} onChange={(e) => update({ left: looseValue(e.target.value) })} />
+              <Input
+                aria-label="Value to test"
+                placeholder="{{ input.total }}"
+                className={mono}
+                value={textOf(row.left)}
+                disabled={disabled}
+                onChange={(e) => update({ left: looseValue(e.target.value) })}
+              />
             )}
-            <NativeSelect aria-label="Operator" value={textOf(row.operator) || "equals"} disabled={disabled} onChange={(e) => update({ operator: e.target.value })}>
+            <NativeSelect
+              aria-label="Operator"
+              value={textOf(row.operator) || "equals"}
+              disabled={disabled}
+              onChange={(e) => update({ operator: e.target.value })}
+            >
               {operators.map((operator) => (
                 <option key={operator} value={operator}>
                   {operator.replace(/_/g, " ")}
@@ -382,7 +480,13 @@ function Field({
                 className={mono}
                 value={textOf(isCases ? row.value : row.right)}
                 disabled={disabled}
-                onChange={(e) => update(isCases ? { value: looseValue(e.target.value) } : { right: looseValue(e.target.value) })}
+                onChange={(e) =>
+                  update(
+                    isCases
+                      ? { value: looseValue(e.target.value) }
+                      : { right: looseValue(e.target.value) },
+                  )
+                }
               />
             )}
           </div>
@@ -400,7 +504,14 @@ function Field({
         addLabel="Add parameter"
         make={() => ({ value: "" })}
         render={(row, update, index) => (
-          <Input aria-label={`Parameter ${index + 1}`} placeholder={`$${index + 1}: {{ input.id }}`} className={mono} value={textOf(row.value)} disabled={disabled} onChange={(e) => update({ value: looseValue(e.target.value) })} />
+          <Input
+            aria-label={`Parameter ${index + 1}`}
+            placeholder={`$${index + 1}: {{ input.id }}`}
+            className={mono}
+            value={textOf(row.value)}
+            disabled={disabled}
+            onChange={(e) => update({ value: looseValue(e.target.value) })}
+          />
         )}
       />,
     );
@@ -410,7 +521,12 @@ function Field({
   }
   if (schema.enum) {
     return shell(
-      <NativeSelect id={id} value={textOf(value)} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+      <NativeSelect
+        id={id}
+        value={textOf(value)}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+      >
         {schema.enum.map((option) => (
           <option key={String(option)} value={String(option)}>
             {String(option).replace(/_/g, " ")}
@@ -421,7 +537,12 @@ function Field({
   }
   if (type === "boolean") {
     return shell(
-      <Switch id={id} checked={Boolean(value)} disabled={disabled} onCheckedChange={(checked) => onChange(checked)} />,
+      <Switch
+        id={id}
+        checked={Boolean(value)}
+        disabled={disabled}
+        onCheckedChange={(checked) => onChange(checked)}
+      />,
       true,
     );
   }
@@ -436,7 +557,15 @@ function Field({
         max={schema.maximum}
         step={type === "integer" ? 1 : "any"}
         disabled={disabled}
-        onChange={(e) => onChange(e.target.value === "" ? (nullable ? null : defaultFor(schema, ctx.root)) : Number(e.target.value))}
+        onChange={(e) =>
+          onChange(
+            e.target.value === ""
+              ? nullable
+                ? null
+                : defaultFor(schema, ctx.root)
+              : Number(e.target.value),
+          )
+        }
       />,
     );
   }
@@ -509,7 +638,7 @@ export function SchemaForm({
   return (
     <div className="space-y-4">
       {general ? (
-        <p className="rounded-lg bg-danger-soft px-3 py-2 text-xs text-danger" role="alert">
+        <p className="bg-danger-soft text-danger rounded-lg px-3 py-2 text-xs" role="alert">
           {general}
         </p>
       ) : null}

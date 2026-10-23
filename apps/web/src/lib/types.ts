@@ -1,8 +1,10 @@
 /** API shapes, mirroring apps/api/src/workflow_engine/schemas. */
 
 export type Role = "owner" | "editor" | "viewer";
-export type ExecutionStatus = "queued" | "running" | "waiting" | "succeeded" | "failed" | "cancelled";
-export type StepStatus = "queued" | "running" | "waiting" | "succeeded" | "failed" | "skipped" | "cancelled";
+export type ExecutionStatus =
+  "queued" | "running" | "waiting" | "succeeded" | "failed" | "cancelled";
+export type StepStatus =
+  "queued" | "running" | "waiting" | "succeeded" | "failed" | "skipped" | "cancelled";
 export type ExecutionMode = "production" | "manual" | "test";
 export type TriggerKind = "manual" | "webhook" | "cron" | "interval" | "event" | "retry";
 
@@ -46,7 +48,13 @@ export type Workspace = {
   created_at: string;
 };
 
-export type Member = { user_id: string; email: string; name: string; role: Role; joined_at: string };
+export type Member = {
+  user_id: string;
+  email: string;
+  name: string;
+  role: Role;
+  joined_at: string;
+};
 
 export type SystemInfo = {
   product_name: string;
@@ -226,11 +234,21 @@ export type TemplateSummary = {
 
 export type Template = TemplateSummary & { definition: Definition };
 
-export type CronPreview = { valid: boolean; description: string | null; next: string[]; error: string | null };
+export type CronPreview = {
+  valid: boolean;
+  description: string | null;
+  next: string[];
+  error: string | null;
+};
 
 /* Executions ------------------------------------------------------------------------------ */
 
-export type ExecutionError = { code: string; message: string; node_id?: string | null; step_id?: string | null };
+export type ExecutionError = {
+  code: string;
+  message: string;
+  node_id?: string | null;
+  step_id?: string | null;
+};
 
 export type ExecutionSummary = {
   id: string;
@@ -268,7 +286,11 @@ export type StepSummary = {
   duration_ms: number | null;
 };
 
-export type StepDetail = StepSummary & { input: unknown; output: unknown; state: Record<string, unknown> };
+export type StepDetail = StepSummary & {
+  input: unknown;
+  output: unknown;
+  state: Record<string, unknown>;
+};
 
 export type Execution = ExecutionSummary & {
   trigger_payload: unknown;
@@ -279,7 +301,11 @@ export type Execution = ExecutionSummary & {
   steps_truncated: boolean;
 };
 
-export type ExecutionDefinition = { version_id: string; version_number: number | null; definition: Definition };
+export type ExecutionDefinition = {
+  version_id: string;
+  version_number: number | null;
+  definition: Definition;
+};
 
 export type LogLine = {
   id: number;
@@ -381,13 +407,32 @@ export type Dashboard = {
   window: DashboardWindow;
   timezone: string;
   generated_at: string;
-  totals: { total: number; succeeded: number; failed: number; cancelled: number; in_progress: number };
+  totals: {
+    total: number;
+    succeeded: number;
+    failed: number;
+    cancelled: number;
+    in_progress: number;
+  };
   success_rate: number | null;
   p50_ms: number | null;
   p95_ms: number | null;
-  volume: { start: string; label: string; succeeded: number; failed: number; cancelled: number; in_progress: number }[];
+  volume: {
+    start: string;
+    label: string;
+    succeeded: number;
+    failed: number;
+    cancelled: number;
+    in_progress: number;
+  }[];
   slowest: { workflow_id: string; name: string; runs: number; p95_ms: number; avg_ms: number }[];
-  busiest: { workflow_id: string; name: string; runs: number; failed: number; failure_rate: number }[];
+  busiest: {
+    workflow_id: string;
+    name: string;
+    runs: number;
+    failed: number;
+    failure_rate: number;
+  }[];
   recent_failures: {
     execution_id: string;
     workflow_id: string;
@@ -397,10 +442,29 @@ export type Dashboard = {
     node_id: string | null;
     finished_at: string | null;
   }[];
-  queue: { executions_queued: number; steps_ready: number; steps_running: number; steps_waiting: number };
+  queue: {
+    executions_queued: number;
+    steps_ready: number;
+    steps_running: number;
+    steps_waiting: number;
+  };
   dead_letters_open: number;
   workflows: number;
   active_workflows: number;
-  workers: { id: string; hostname: string; busy: number; concurrency: number; leader: boolean; version: string; seen_at: string }[];
-  upcoming: { workflow_id: string; workflow_name: string; node_id: string; kind: string; next_fire_at: string }[];
+  workers: {
+    id: string;
+    hostname: string;
+    busy: number;
+    concurrency: number;
+    leader: boolean;
+    version: string;
+    seen_at: string;
+  }[];
+  upcoming: {
+    workflow_id: string;
+    workflow_name: string;
+    node_id: string;
+    kind: string;
+    next_fire_at: string;
+  }[];
 };

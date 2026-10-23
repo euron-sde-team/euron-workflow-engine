@@ -19,7 +19,7 @@ import type { LogLine, NodeType, StepSummary } from "@/lib/types";
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[11px] uppercase tracking-wide text-subtle">{label}</dt>
+      <dt className="text-subtle text-[11px] tracking-wide uppercase">{label}</dt>
       <dd className="truncate text-[12.5px]">{children}</dd>
     </div>
   );
@@ -47,11 +47,11 @@ export function StepPanel({
   const mine = logs.filter((line) => line.step_id === summary.id);
   return (
     <div className="flex h-full flex-col" data-testid="step-panel">
-      <div className="flex items-start gap-3 border-b border-border px-4 py-3.5">
+      <div className="border-border flex items-start gap-3 border-b px-4 py-3.5">
         <NodeIcon icon={nodeType?.icon ?? "blocks"} category={nodeType?.category} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14px] font-semibold">{summary.node_name}</p>
-          <p className="truncate text-[12px] text-muted-foreground">
+          <p className="text-muted-foreground truncate text-[12px]">
             {nodeType?.name ?? summary.node_type}
             {pass ? `, ${pass}` : ""}
           </p>
@@ -63,7 +63,9 @@ export function StepPanel({
       <div className="space-y-4 px-4 py-4">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={summary.status} />
-          {summary.ports.length && summary.status === "succeeded" && !(summary.ports.length === 1 && summary.ports[0] === "main") ? (
+          {summary.ports.length &&
+          summary.status === "succeeded" &&
+          !(summary.ports.length === 1 && summary.ports[0] === "main") ? (
             <Badge tone="outline">took {summary.ports.join(", ")}</Badge>
           ) : null}
         </div>
@@ -72,40 +74,62 @@ export function StepPanel({
             {summary.attempt} of {summary.max_attempts}
           </Fact>
           <Fact label="Duration">{formatDuration(summary.duration_ms)}</Fact>
-          <Fact label="Started">{summary.started_at ? formatDateTime(summary.started_at) : "-"}</Fact>
-          <Fact label="Finished">{summary.finished_at ? formatDateTime(summary.finished_at) : "-"}</Fact>
+          <Fact label="Started">
+            {summary.started_at ? formatDateTime(summary.started_at) : "-"}
+          </Fact>
+          <Fact label="Finished">
+            {summary.finished_at ? formatDateTime(summary.finished_at) : "-"}
+          </Fact>
         </dl>
         {summary.status === "waiting" && summary.available_at ? (
-          <p className="flex items-center gap-2 rounded-lg bg-warning-soft px-3 py-2 text-[12.5px] text-warning">
+          <p className="bg-warning-soft text-warning flex items-center gap-2 rounded-lg px-3 py-2 text-[12.5px]">
             <Hourglass className="size-4" aria-hidden />
             Resumes {formatDateTime(summary.available_at)}
           </p>
         ) : null}
         {summary.error ? (
-          <div className="rounded-lg border border-danger/30 bg-danger-soft px-3 py-2.5 text-[12.5px]" role="alert">
-            <p className="font-mono text-[11.5px] font-semibold text-danger">{summary.error.code}</p>
-            <p className="mt-0.5 text-foreground">{summary.error.message}</p>
+          <div
+            className="border-danger/30 bg-danger-soft rounded-lg border px-3 py-2.5 text-[12.5px]"
+            role="alert"
+          >
+            <p className="text-danger font-mono text-[11.5px] font-semibold">
+              {summary.error.code}
+            </p>
+            <p className="text-foreground mt-0.5">{summary.error.message}</p>
             {summary.error.retryable !== undefined ? (
-              <p className="mt-1 text-[11.5px] text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-[11.5px]">
                 {summary.error.retryable ? "Retryable error" : "Not retryable"}
               </p>
             ) : null}
           </div>
         ) : null}
       </div>
-      <Tabs defaultValue={summary.status === "failed" ? "input" : "output"} className="flex min-h-0 flex-1 flex-col px-4 pb-4">
+      <Tabs
+        defaultValue={summary.status === "failed" ? "input" : "output"}
+        className="flex min-h-0 flex-1 flex-col px-4 pb-4"
+      >
         <TabsList>
           <TabsTrigger value="input">Input</TabsTrigger>
           <TabsTrigger value="output">Output</TabsTrigger>
           <TabsTrigger value="logs">Logs {mine.length ? `(${mine.length})` : ""}</TabsTrigger>
-          {summary.error?.details !== undefined ? <TabsTrigger value="error">Error details</TabsTrigger> : null}
+          {summary.error?.details !== undefined ? (
+            <TabsTrigger value="error">Error details</TabsTrigger>
+          ) : null}
         </TabsList>
         <TabsContent value="input">
-          {step.data ? <JsonView value={step.data.input} label="Step input" empty="No input." /> : <Skeleton className="h-32" />}
+          {step.data ? (
+            <JsonView value={step.data.input} label="Step input" empty="No input." />
+          ) : (
+            <Skeleton className="h-32" />
+          )}
         </TabsContent>
         <TabsContent value="output">
           {step.data ? (
-            <JsonView value={step.data.output} label="Step output" empty={live ? "Not finished yet." : "No output."} />
+            <JsonView
+              value={step.data.output}
+              label="Step output"
+              empty={live ? "Not finished yet." : "No output."}
+            />
           ) : (
             <Skeleton className="h-32" />
           )}

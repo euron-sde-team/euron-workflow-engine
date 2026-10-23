@@ -38,7 +38,12 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } fro
 import { toast } from "sonner";
 
 import { WorkflowNode } from "@/components/editor/canvas-node";
-import { PublishDialog, RunDialog, SettingsDialog, VersionsDialog } from "@/components/editor/dialogs";
+import {
+  PublishDialog,
+  RunDialog,
+  SettingsDialog,
+  VersionsDialog,
+} from "@/components/editor/dialogs";
 import { Inspector, type TestContext } from "@/components/editor/inspector";
 import { DRAG_TYPE, Palette } from "@/components/editor/palette";
 import { StatusBadge, StatusDot } from "@/components/status";
@@ -150,7 +155,10 @@ function EditorCanvas({
     const started = version.current;
     setSaveState("saving");
     try {
-      const saved = await save.mutateAsync({ definition: toDefinition(nodes, edges), revision: revision.current });
+      const saved = await save.mutateAsync({
+        definition: toDefinition(nodes, edges),
+        revision: revision.current,
+      });
       revision.current = saved.revision;
       setIssues(saved.issues);
       setSaveState(version.current === started ? "saved" : "dirty");
@@ -179,12 +187,17 @@ function EditorCanvas({
   // Changes that matter to the definition mark the draft dirty; selection and measuring do not.
   const onNodesChange = useCallback(
     (changes: NodeChange<CanvasNode>[]) => {
-      const visible = readOnly ? changes.filter((c) => c.type === "select" || c.type === "dimensions") : changes;
+      const visible = readOnly
+        ? changes.filter((c) => c.type === "select" || c.type === "dimensions")
+        : changes;
       setNodes((current) => applyNodeChanges(visible, current));
-      if (visible.some((c) => c.type === "remove" || (c.type === "position" && !c.dragging))) touch();
+      if (visible.some((c) => c.type === "remove" || (c.type === "position" && !c.dragging)))
+        touch();
       const removed = visible.filter((c) => c.type === "remove").map((c) => c.id);
       if (removed.length) {
-        setEdges((current) => current.filter((e) => !removed.includes(e.source) && !removed.includes(e.target)));
+        setEdges((current) =>
+          current.filter((e) => !removed.includes(e.source) && !removed.includes(e.target)),
+        );
         if (selected && removed.includes(selected)) setSelected(null);
       }
     },
@@ -236,17 +249,33 @@ function EditorCanvas({
     (type: NodeType, position?: { x: number; y: number }) => {
       if (readOnly) return;
       const anchor = nodes.find((n) => n.id === selected);
-      const id = nextNodeId(type.type, nodes.map((n) => n.id));
+      const id = nextNodeId(
+        type.type,
+        nodes.map((n) => n.id),
+      );
       const spec: NodeSpec = {
         id,
         type: type.type,
-        name: nextNodeName(type.name, nodes.map((n) => n.data.spec.name)),
+        name: nextNodeName(
+          type.name,
+          nodes.map((n) => n.data.spec.name),
+        ),
         config: initialConfig(type.config_schema),
-        position: position ?? (anchor ? { x: anchor.position.x + 280, y: anchor.position.y } : flow.screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })),
+        position:
+          position ??
+          (anchor
+            ? { x: anchor.position.x + 280, y: anchor.position.y }
+            : flow.screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })),
       };
       setNodes((current) => [
         ...current.map((n) => ({ ...n, selected: false })),
-        { id, type: "workflow", position: spec.position, selected: true, data: { spec, nodeType: type, issues: 0, warnings: 0 } },
+        {
+          id,
+          type: "workflow",
+          position: spec.position,
+          selected: true,
+          data: { spec, nodeType: type, issues: 0, warnings: 0 },
+        },
       ]);
       // Adding after a selected node connects them, the way people build a flow left to right.
       if (anchor && !position && !type.is_trigger) {
@@ -254,7 +283,13 @@ function EditorCanvas({
         if (port) {
           setEdges((current) => [
             ...current,
-            { id: edgeId(anchor.id, port, id, "main"), source: anchor.id, target: id, sourceHandle: port, targetHandle: "main" },
+            {
+              id: edgeId(anchor.id, port, id, "main"),
+              source: anchor.id,
+              target: id,
+              sourceHandle: port,
+              targetHandle: "main",
+            },
           ]);
         }
       }
@@ -266,7 +301,9 @@ function EditorCanvas({
 
   const updateSpec = useCallback(
     (spec: NodeSpec) => {
-      setNodes((current) => current.map((n) => (n.id === spec.id ? { ...n, data: { ...n.data, spec } } : n)));
+      setNodes((current) =>
+        current.map((n) => (n.id === spec.id ? { ...n, data: { ...n.data, spec } } : n)),
+      );
       touch();
     },
     [touch],
@@ -286,14 +323,23 @@ function EditorCanvas({
     (id: string) => {
       const source = nodes.find((n) => n.id === id);
       if (!source) return;
-      const newId = nextNodeId(source.data.spec.type, nodes.map((n) => n.id));
+      const newId = nextNodeId(
+        source.data.spec.type,
+        nodes.map((n) => n.id),
+      );
       const spec: NodeSpec = {
         ...structuredClone(source.data.spec),
         id: newId,
-        name: nextNodeName(source.data.spec.name, nodes.map((n) => n.data.spec.name)),
+        name: nextNodeName(
+          source.data.spec.name,
+          nodes.map((n) => n.data.spec.name),
+        ),
         position: { x: source.position.x + 40, y: source.position.y + 120 },
       };
-      setNodes((current) => [...current, { id: newId, type: "workflow", position: spec.position, data: { ...source.data, spec } }]);
+      setNodes((current) => [
+        ...current,
+        { id: newId, type: "workflow", position: spec.position, data: { ...source.data, spec } },
+      ]);
       setSelected(newId);
       touch();
     },
@@ -345,13 +391,19 @@ function EditorCanvas({
   const triggers = nodes.map((n) => n.data.spec).filter((spec) => spec.type.startsWith("trigger."));
 
   // Sample data for the inspector's test tab: the latest output of the node feeding this one.
-  const upstream = selected ? edges.find((e) => e.target === selected && (e.targetHandle ?? "main") === "main")?.source : undefined;
+  const upstream = selected
+    ? edges.find((e) => e.target === selected && (e.targetHandle ?? "main") === "main")?.source
+    : undefined;
   const upstreamStep = upstream && runId ? steps.get(upstream) : undefined;
   const upstreamDetail = useStep(workspace, runId ?? "none", upstreamStep?.id ?? null);
   const testContext: TestContext = useMemo(() => {
     const triggerSample = triggers[0]?.config.sample_payload ?? {};
-    const upstreamType = upstream ? typeMap.get(nodes.find((n) => n.id === upstream)?.data.spec.type ?? "") : undefined;
-    const input = upstreamDetail.data?.output ?? (upstreamType?.is_trigger ? triggerSample : (upstreamType?.sample_output ?? triggerSample));
+    const upstreamType = upstream
+      ? typeMap.get(nodes.find((n) => n.id === upstream)?.data.spec.type ?? "")
+      : undefined;
+    const input =
+      upstreamDetail.data?.output ??
+      (upstreamType?.is_trigger ? triggerSample : (upstreamType?.sample_output ?? triggerSample));
     return {
       input,
       trigger: run.data?.trigger_payload ?? triggerSample,
@@ -363,7 +415,11 @@ function EditorCanvas({
   async function startRun(triggerId: string, payload: unknown) {
     if (saveState !== "saved" && !(await persist())) return;
     try {
-      const started = await actions.run.mutateAsync({ use_draft: true, trigger_node: triggerId, payload });
+      const started = await actions.run.mutateAsync({
+        use_draft: true,
+        trigger_node: triggerId,
+        payload,
+      });
       setRunId(started.execution_id);
       setDialog(null);
       toast.success("Test run started");
@@ -408,19 +464,28 @@ function EditorCanvas({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex flex-wrap items-center gap-2 border-b border-border bg-card px-3 py-2">
+      <header className="border-border bg-card flex flex-wrap items-center gap-2 border-b px-3 py-2">
         <Button asChild variant="ghost" size="icon-sm" aria-label="Back to workflows">
           <Link href={`/w/${workspace}/workflows`}>
             <ArrowLeft />
           </Link>
         </Button>
         <div className="min-w-0">
-          <h1 className="truncate text-[15px] font-semibold tracking-tight" data-testid="workflow-name">
+          <h1
+            className="truncate text-[15px] font-semibold tracking-tight"
+            data-testid="workflow-name"
+          >
             {workflow.name}
           </h1>
-          <div className="flex items-center gap-2 text-[11.5px] text-muted-foreground">
-            {workflow.published_version ? <span>Version {workflow.published_version}</span> : <span>Never published</span>}
-            {workflow.has_unpublished_changes && workflow.published_version ? <Badge tone="warning">Unpublished changes</Badge> : null}
+          <div className="text-muted-foreground flex items-center gap-2 text-[11.5px]">
+            {workflow.published_version ? (
+              <span>Version {workflow.published_version}</span>
+            ) : (
+              <span>Never published</span>
+            )}
+            {workflow.has_unpublished_changes && workflow.published_version ? (
+              <Badge tone="warning">Unpublished changes</Badge>
+            ) : null}
             <span className="flex items-center gap-1" data-testid="save-state">
               {saveState === "saving" ? (
                 <>
@@ -442,25 +507,45 @@ function EditorCanvas({
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="secondary" size="sm" data-testid="issues-button">
-                {errors.length ? <CircleAlert className="text-danger" /> : <ListChecks className="text-success" />}
-                {errors.length ? `${errors.length} problem${errors.length === 1 ? "" : "s"}` : "No problems"}
+                {errors.length ? (
+                  <CircleAlert className="text-danger" />
+                ) : (
+                  <ListChecks className="text-success" />
+                )}
+                {errors.length
+                  ? `${errors.length} problem${errors.length === 1 ? "" : "s"}`
+                  : "No problems"}
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-96">
               {issues.length === 0 ? (
-                <p className="text-[13px] text-muted-foreground">The workflow is ready to publish.</p>
+                <p className="text-muted-foreground text-[13px]">
+                  The workflow is ready to publish.
+                </p>
               ) : (
                 <ul className="max-h-80 space-y-1 overflow-y-auto">
                   {issues.map((issue, index) => (
                     <li key={index}>
                       <button
                         type="button"
-                        className="flex w-full gap-2 rounded-md px-2 py-1.5 text-left text-[12.5px] hover:bg-muted"
+                        className="hover:bg-muted flex w-full gap-2 rounded-md px-2 py-1.5 text-left text-[12.5px]"
                         onClick={() => issue.node_id && setSelected(issue.node_id)}
                       >
-                        <CircleAlert className={cn("mt-0.5 size-3.5 shrink-0", issue.severity === "error" ? "text-danger" : "text-warning")} aria-hidden />
+                        <CircleAlert
+                          className={cn(
+                            "mt-0.5 size-3.5 shrink-0",
+                            issue.severity === "error" ? "text-danger" : "text-warning",
+                          )}
+                          aria-hidden
+                        />
                         <span>
-                          {issue.node_id ? <span className="font-medium">{nodes.find((n) => n.id === issue.node_id)?.data.spec.name ?? issue.node_id}: </span> : null}
+                          {issue.node_id ? (
+                            <span className="font-medium">
+                              {nodes.find((n) => n.id === issue.node_id)?.data.spec.name ??
+                                issue.node_id}
+                              :{" "}
+                            </span>
+                          ) : null}
                           {issue.message}
                         </span>
                       </button>
@@ -472,7 +557,12 @@ function EditorCanvas({
           </Popover>
           {!readOnly ? (
             <>
-              <Button variant="secondary" size="sm" onClick={() => setDialog("run")} data-testid="run-draft">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setDialog("run")}
+                data-testid="run-draft"
+              >
                 <Play /> Run
               </Button>
               <Button size="sm" onClick={() => setDialog("publish")} data-testid="publish">
@@ -481,11 +571,16 @@ function EditorCanvas({
             </>
           ) : null}
           <Tooltip content={workflow.published_version ? "Listen to triggers" : "Publish first"}>
-            <label className="flex items-center gap-2 rounded-lg border border-border px-2.5 py-1 text-[12.5px]">
+            <label className="border-border flex items-center gap-2 rounded-lg border px-2.5 py-1 text-[12.5px]">
               Active
               <Switch
                 checked={workflow.active}
-                disabled={readOnly || !workflow.published_version || actions.activate.isPending || actions.deactivate.isPending}
+                disabled={
+                  readOnly ||
+                  !workflow.published_version ||
+                  actions.activate.isPending ||
+                  actions.deactivate.isPending
+                }
                 onCheckedChange={(checked) => void toggleActive(checked)}
                 aria-label="Active"
               />
@@ -535,11 +630,19 @@ function EditorCanvas({
 
       <div className="flex min-h-0 flex-1">
         {!readOnly && palette ? (
-          <aside className="hidden w-64 shrink-0 border-r border-border bg-sidebar md:block" aria-label="Nodes">
+          <aside
+            className="border-border bg-sidebar hidden w-64 shrink-0 border-r md:block"
+            aria-label="Nodes"
+          >
             <Palette types={types} onAdd={(type) => addNode(type)} />
           </aside>
         ) : null}
-        <div className="relative min-w-0 flex-1" onDragOver={(e) => e.preventDefault()} onDrop={onDrop} data-testid="canvas">
+        <div
+          className="relative min-w-0 flex-1"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={onDrop}
+          data-testid="canvas"
+        >
           <ReactFlow<CanvasNode, CanvasEdge>
             nodes={rendered}
             edges={edges}
@@ -559,15 +662,26 @@ function EditorCanvas({
             proOptions={{ hideAttribution: true }}
             defaultEdgeOptions={{ type: "smoothstep" }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={18} size={1.2} color="var(--canvas-dot)" />
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={18}
+              size={1.2}
+              color="var(--canvas-dot)"
+            />
             <Controls showInteractive={false} position="bottom-left" />
-            <MiniMap pannable zoomable position="bottom-right" className="!hidden lg:!block" ariaLabel="Minimap" />
+            <MiniMap
+              pannable
+              zoomable
+              position="bottom-right"
+              className="!hidden lg:!block"
+              ariaLabel="Minimap"
+            />
           </ReactFlow>
           {!readOnly ? (
             <Button
               variant="secondary"
               size="icon-sm"
-              className="absolute left-3 top-3 hidden md:inline-flex"
+              className="absolute top-3 left-3 hidden md:inline-flex"
               aria-label={palette ? "Hide nodes" : "Show nodes"}
               onClick={() => setPalette((p) => !p)}
             >
@@ -575,21 +689,35 @@ function EditorCanvas({
             </Button>
           ) : null}
           {runId && run.data ? (
-            <div className="absolute inset-x-3 bottom-3 z-10 mx-auto max-w-xl rounded-xl border border-border bg-card p-3 shadow-md lg:right-[13rem]" data-testid="run-panel">
+            <div
+              className="border-border bg-card absolute inset-x-3 bottom-3 z-10 mx-auto max-w-xl rounded-xl border p-3 shadow-md lg:right-[13rem]"
+              data-testid="run-panel"
+            >
               <div className="flex items-center gap-2">
                 <StatusBadge status={run.data.status} />
-                <span className="text-[12.5px] text-muted-foreground">
-                  Test run {run.data.duration_ms !== null ? `in ${formatDuration(run.data.duration_ms)}` : "in progress"}
+                <span className="text-muted-foreground text-[12.5px]">
+                  Test run{" "}
+                  {run.data.duration_ms !== null
+                    ? `in ${formatDuration(run.data.duration_ms)}`
+                    : "in progress"}
                 </span>
-                <Link href={`/w/${workspace}/executions/${run.data.id}`} className="ml-auto text-[12.5px] font-medium text-primary hover:underline">
+                <Link
+                  href={`/w/${workspace}/executions/${run.data.id}`}
+                  className="text-primary ml-auto text-[12.5px] font-medium hover:underline"
+                >
                   Open execution
                 </Link>
-                <Button variant="ghost" size="icon-sm" aria-label="Close run panel" onClick={() => setRunId(null)}>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Close run panel"
+                  onClick={() => setRunId(null)}
+                >
                   <X />
                 </Button>
               </div>
               {run.data.error ? (
-                <p className="mt-2 rounded-md bg-danger-soft px-2 py-1 text-xs text-danger">
+                <p className="bg-danger-soft text-danger mt-2 rounded-md px-2 py-1 text-xs">
                   <span className="font-mono">{run.data.error.code}</span>: {run.data.error.message}
                 </p>
               ) : null}
@@ -598,7 +726,7 @@ function EditorCanvas({
                   <button
                     key={step.id}
                     type="button"
-                    className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-[12px]"
                     onClick={() => setSelected(step.node_id)}
                   >
                     <StatusDot status={step.status} />
@@ -610,7 +738,10 @@ function EditorCanvas({
           ) : null}
         </div>
         {selectedNode ? (
-          <aside className="fixed inset-0 z-30 w-full border-l border-border bg-card md:static md:z-auto md:w-[24rem] md:shrink-0" aria-label="Node settings">
+          <aside
+            className="border-border bg-card fixed inset-0 z-30 w-full border-l md:static md:z-auto md:w-[24rem] md:shrink-0"
+            aria-label="Node settings"
+          >
             <Inspector
               key={`${selectedNode.id}:${generation}`}
               workspace={workspace}

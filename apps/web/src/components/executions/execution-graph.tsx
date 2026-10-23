@@ -49,7 +49,7 @@ export function ExecutionGraph({
   });
 
   return (
-    <div className="h-[22rem] rounded-b-xl bg-canvas" data-testid="execution-graph">
+    <div className="bg-canvas h-[22rem] rounded-b-xl" data-testid="execution-graph">
       <ReactFlow<CanvasNode, CanvasEdge>
         nodes={nodes}
         edges={edges}
@@ -66,7 +66,12 @@ export function ExecutionGraph({
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{ type: "smoothstep" }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={18} size={1.2} color="var(--canvas-dot)" />
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={18}
+          size={1.2}
+          color="var(--canvas-dot)"
+        />
         <Controls showInteractive={false} position="bottom-left" />
       </ReactFlow>
     </div>

@@ -17,7 +17,9 @@ export function PageHeader({
     <header className={cn("flex flex-wrap items-end justify-between gap-4 pb-6", className)}>
       <div className="min-w-0">
         <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
-        {description ? <p className="mt-1 text-[13.5px] text-muted-foreground">{description}</p> : null}
+        {description ? (
+          <p className="text-muted-foreground mt-1 text-[13.5px]">{description}</p>
+        ) : null}
       </div>
       {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
     </header>
@@ -25,5 +27,7 @@ export function PageHeader({
 }
 
 export function PageBody({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("mx-auto w-full max-w-6xl px-6 py-8 lg:px-10", className)}>{children}</div>;
+  return (
+    <div className={cn("mx-auto w-full max-w-6xl px-6 py-8 lg:px-10", className)}>{children}</div>
+  );
 }

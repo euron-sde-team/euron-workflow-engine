@@ -64,7 +64,7 @@ function NavLink({
       className={cn(
         "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13.5px] transition-colors [&_svg]:size-4",
         active
-          ? "bg-card font-medium text-foreground shadow-sm ring-1 ring-border"
+          ? "bg-card text-foreground ring-border font-medium shadow-sm ring-1"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
@@ -74,13 +74,21 @@ function NavLink({
   );
 }
 
-function Sidebar({ me, current, onNavigate }: { me: Me; current: WorkspaceSummary; onNavigate?: () => void }) {
+function Sidebar({
+  me,
+  current,
+  onNavigate,
+}: {
+  me: Me;
+  current: WorkspaceSummary;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const base = `/w/${current.slug}`;
   const isActive = (segment: string) => pathname.startsWith(`${base}/${segment}`);
   return (
-    <div className="flex h-full w-60 flex-col border-r border-sidebar-border bg-sidebar">
-      <div className="px-3 pb-2 pt-3">
+    <div className="border-sidebar-border bg-sidebar flex h-full w-60 flex-col border-r">
+      <div className="px-3 pt-3 pb-2">
         <WorkspaceSwitcher current={current} all={me.workspaces} />
       </div>
       <nav className="mt-2 space-y-0.5 px-3" aria-label="Build">
@@ -95,7 +103,9 @@ function Sidebar({ me, current, onNavigate }: { me: Me; current: WorkspaceSummar
           />
         ))}
       </nav>
-      <p className="mt-5 px-5 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-subtle">Operate</p>
+      <p className="text-subtle mt-5 px-5 pb-1.5 text-[11px] font-medium tracking-wider uppercase">
+        Operate
+      </p>
       <nav className="space-y-0.5 px-3" aria-label="Operate">
         {OPERATE.map((item) => (
           <NavLink
@@ -108,7 +118,7 @@ function Sidebar({ me, current, onNavigate }: { me: Me; current: WorkspaceSummar
           />
         ))}
       </nav>
-      <div className="mt-auto border-t border-sidebar-border p-3">
+      <div className="border-sidebar-border mt-auto border-t p-3">
         <UserMenu user={me.user} />
       </div>
     </div>
@@ -139,7 +149,12 @@ export function AppShell({ workspace, children }: { workspace: string; children:
     );
   }
   if (me.error || !me.data) {
-    return <EmptyState title="WorkflowEngine is unreachable" description={me.error?.message ?? "Try again shortly."} />;
+    return (
+      <EmptyState
+        title="WorkflowEngine is unreachable"
+        description={me.error?.message ?? "Try again shortly."}
+      />
+    );
   }
   if (!current) {
     return (
@@ -169,14 +184,19 @@ export function AppShell({ workspace, children }: { workspace: string; children:
             className="absolute inset-0 bg-black/40"
             onClick={() => setDrawer(false)}
           />
-          <div className="relative h-full w-60 animate-fade-in">
+          <div className="animate-fade-in relative h-full w-60">
             <Sidebar me={me.data} current={current} onNavigate={() => setDrawer(false)} />
           </div>
         </div>
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-12 items-center justify-between border-b border-border px-3 lg:hidden">
-          <Button variant="ghost" size="icon-sm" aria-label="Open menu" onClick={() => setDrawer(true)}>
+        <header className="border-border flex h-12 items-center justify-between border-b px-3 lg:hidden">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Open menu"
+            onClick={() => setDrawer(true)}
+          >
             {drawer ? <X /> : <Menu />}
           </Button>
           <Wordmark name={runtimeEnv().productName} className="[&_svg]:size-6" />

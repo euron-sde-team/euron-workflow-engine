@@ -14,10 +14,15 @@ export type CanvasNode = Node<CanvasNodeData, "workflow">;
 export type CanvasEdge = Edge;
 
 /** Output ports of a node; switch nodes derive theirs from their cases. */
-export function outputPorts(spec: Pick<NodeSpec, "type" | "config">, nodeType: NodeType | undefined): string[] {
+export function outputPorts(
+  spec: Pick<NodeSpec, "type" | "config">,
+  nodeType: NodeType | undefined,
+): string[] {
   if (!nodeType) return ["main"];
   if (nodeType.dynamic_ports) {
-    const cases = Array.isArray(spec.config.cases) ? (spec.config.cases as { port?: unknown }[]) : [];
+    const cases = Array.isArray(spec.config.cases)
+      ? (spec.config.cases as { port?: unknown }[])
+      : [];
     const ports = cases.map((c) => (typeof c.port === "string" ? c.port : "")).filter(Boolean);
     if (spec.config.fallback !== false) ports.push("default");
     return [...new Set(ports)];
@@ -31,7 +36,9 @@ export function portLabel(port: string, nodeType: NodeType | undefined): string 
 
 /** A readable, unique id for a new node: http_request, http_request_2, ... */
 export function nextNodeId(type: string, taken: Iterable<string>): string {
-  const base = (type.split(".").at(-1) ?? "node").replace(/[^a-z0-9_]/g, "_").replace(/^[^a-z]+/, "") || "node";
+  const base =
+    (type.split(".").at(-1) ?? "node").replace(/[^a-z0-9_]/g, "_").replace(/^[^a-z]+/, "") ||
+    "node";
   const used = new Set(taken);
   if (!used.has(base)) return base;
   for (let index = 2; ; index += 1) {
@@ -49,22 +56,31 @@ export function nextNodeName(name: string, taken: Iterable<string>): string {
   }
 }
 
-export function edgeId(source: string, sourcePort: string, target: string, targetPort: string): string {
+export function edgeId(
+  source: string,
+  sourcePort: string,
+  target: string,
+  targetPort: string,
+): string {
   return `${source}-${sourcePort}-${target}-${targetPort}`;
 }
 
 /** Nodes without a stored position (imports, API-built workflows) get a left-to-right layout. */
 export function layout(definition: Definition): Definition {
-  if (definition.nodes.every((n) => n.position && (n.position.x !== 0 || n.position.y !== 0))) return definition;
+  if (definition.nodes.every((n) => n.position && (n.position.x !== 0 || n.position.y !== 0)))
+    return definition;
   const incoming = new Map<string, number>();
   for (const node of definition.nodes) incoming.set(node.id, 0);
-  for (const edge of definition.edges) incoming.set(edge.target, (incoming.get(edge.target) ?? 0) + 1);
+  for (const edge of definition.edges)
+    incoming.set(edge.target, (incoming.get(edge.target) ?? 0) + 1);
   const depth = new Map<string, number>();
   const queue = definition.nodes.filter((n) => (incoming.get(n.id) ?? 0) === 0).map((n) => n.id);
   for (const id of queue) depth.set(id, 0);
   while (queue.length) {
     const id = queue.shift()!;
-    for (const edge of definition.edges.filter((e) => e.source === id && e.target_port !== "loop")) {
+    for (const edge of definition.edges.filter(
+      (e) => e.source === id && e.target_port !== "loop",
+    )) {
       const next = (depth.get(id) ?? 0) + 1;
       if (next > (depth.get(edge.target) ?? -1)) {
         depth.set(edge.target, next);

@@ -14,7 +14,8 @@ function makeClient(): QueryClient {
         staleTime: 15_000,
         refetchOnWindowFocus: false,
         // Retry transient server failures only; a 4xx will not change on retry.
-        retry: (count, error) => error instanceof ApiError && (error.status === 0 || error.status >= 500) && count < 2,
+        retry: (count, error) =>
+          error instanceof ApiError && (error.status === 0 || error.status >= 500) && count < 2,
       },
     },
   });
@@ -25,7 +26,12 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={client}>
       <TooltipProvider>{children}</TooltipProvider>
-      <Toaster position="bottom-right" richColors closeButton toastOptions={{ className: "text-[13px]" }} />
+      <Toaster
+        position="bottom-right"
+        richColors
+        closeButton
+        toastOptions={{ className: "text-[13px]" }}
+      />
     </QueryClientProvider>
   );
 }

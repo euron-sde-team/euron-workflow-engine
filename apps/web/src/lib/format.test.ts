@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDuration, formatPercent, formatRelative, initials, prettyJson, shortId } from "@/lib/format";
+import {
+  formatDuration,
+  formatPercent,
+  formatRelative,
+  initials,
+  prettyJson,
+  shortId,
+} from "@/lib/format";
 
 describe("formatDuration", () => {
   it.each([

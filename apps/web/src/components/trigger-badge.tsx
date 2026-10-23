@@ -1,4 +1,12 @@
-import { CalendarClock, Hand, RadioTower, RotateCcw, Timer, Webhook, type LucideIcon } from "lucide-react";
+import {
+  CalendarClock,
+  Hand,
+  RadioTower,
+  RotateCcw,
+  Timer,
+  Webhook,
+  type LucideIcon,
+} from "lucide-react";
 
 import { cn } from "@/lib/cn";
 
@@ -15,7 +23,12 @@ export function TriggerLabel({ kind, className }: { kind: string; className?: st
   const entry = TRIGGERS[kind] ?? { label: kind, icon: Hand };
   const Icon = entry.icon;
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground", className)}>
+    <span
+      className={cn(
+        "text-muted-foreground inline-flex items-center gap-1.5 text-[12.5px]",
+        className,
+      )}
+    >
       <Icon className="size-3.5" aria-hidden />
       {entry.label}
     </span>

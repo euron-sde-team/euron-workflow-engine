@@ -16,11 +16,21 @@ const GROUPS: { key: NodeType["category"]; label: string }[] = [
 
 export const DRAG_TYPE = "application/x-wfe-node-type";
 
-export function Palette({ types, onAdd, disabled }: { types: NodeType[]; onAdd: (type: NodeType) => void; disabled?: boolean }) {
+export function Palette({
+  types,
+  onAdd,
+  disabled,
+}: {
+  types: NodeType[];
+  onAdd: (type: NodeType) => void;
+  disabled?: boolean;
+}) {
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? types.filter((t) => `${t.name} ${t.description} ${t.type}`.toLowerCase().includes(q)) : types;
+    return q
+      ? types.filter((t) => `${t.name} ${t.description} ${t.type}`.toLowerCase().includes(q))
+      : types;
   }, [types, query]);
 
   function onDragStart(event: DragEvent, type: NodeType) {
@@ -31,7 +41,10 @@ export function Palette({ types, onAdd, disabled }: { types: NodeType[]; onAdd: 
   return (
     <div className="flex h-full flex-col">
       <div className="relative p-3">
-        <Search className="pointer-events-none absolute left-5 top-1/2 size-4 -translate-y-1/2 text-subtle" aria-hidden />
+        <Search
+          className="text-subtle pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2"
+          aria-hidden
+        />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -46,7 +59,9 @@ export function Palette({ types, onAdd, disabled }: { types: NodeType[]; onAdd: 
           if (!items.length) return null;
           return (
             <section key={group.key} className="mb-3">
-              <h3 className="px-1 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-subtle">{group.label}</h3>
+              <h3 className="text-subtle px-1 pb-1.5 text-[11px] font-medium tracking-wider uppercase">
+                {group.label}
+              </h3>
               <ul className="space-y-1">
                 {items.map((type) => (
                   <li key={type.type}>
@@ -56,14 +71,16 @@ export function Palette({ types, onAdd, disabled }: { types: NodeType[]; onAdd: 
                       disabled={disabled}
                       onDragStart={(event) => onDragStart(event, type)}
                       onClick={() => onAdd(type)}
-                      className="flex w-full items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-left transition-colors hover:border-border hover:bg-card disabled:opacity-50"
+                      className="hover:border-border hover:bg-card flex w-full items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-left transition-colors disabled:opacity-50"
                       title={type.description}
                       data-testid={`palette-${type.type}`}
                     >
                       <NodeIcon icon={type.icon} category={type.category} className="size-7" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13px] font-medium">{type.name}</span>
-                        <span className="block truncate text-[11.5px] text-muted-foreground">{type.description}</span>
+                        <span className="text-muted-foreground block truncate text-[11.5px]">
+                          {type.description}
+                        </span>
                       </span>
                     </button>
                   </li>
@@ -72,7 +89,9 @@ export function Palette({ types, onAdd, disabled }: { types: NodeType[]; onAdd: 
             </section>
           );
         })}
-        {filtered.length === 0 ? <p className="px-1 text-[13px] text-muted-foreground">No node matches.</p> : null}
+        {filtered.length === 0 ? (
+          <p className="text-muted-foreground px-1 text-[13px]">No node matches.</p>
+        ) : null}
       </div>
     </div>
   );

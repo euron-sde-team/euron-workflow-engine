@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { canConnect, layout, nextNodeId, nextNodeName, outputPorts, toCanvas, toDefinition, type CanvasNode } from "@/lib/graph";
+import {
+  canConnect,
+  layout,
+  nextNodeId,
+  nextNodeName,
+  outputPorts,
+  toCanvas,
+  toDefinition,
+  type CanvasNode,
+} from "@/lib/graph";
 import type { Definition, NodeType } from "@/lib/types";
 
 const type = (overrides: Partial<NodeType>): NodeType =>
@@ -16,7 +25,13 @@ const type = (overrides: Partial<NodeType>): NodeType =>
     port_labels: {},
     dynamic_ports: false,
     side_effects: false,
-    default_retry: { max_attempts: 1, initial_delay_ms: 1000, max_delay_ms: 60000, multiplier: 2, jitter: true },
+    default_retry: {
+      max_attempts: 1,
+      initial_delay_ms: 1000,
+      max_delay_ms: 60000,
+      multiplier: 2,
+      jitter: true,
+    },
     default_timeout_s: 30,
     template_fields: [],
     credential_fields: {},
@@ -42,9 +57,17 @@ describe("ports and ids", () => {
   it("derives switch ports from its cases", () => {
     const switchType = type({ type: "flow.switch", dynamic_ports: true, ports: ["default"] });
     const config = { cases: [{ port: "high" }, { port: "low" }], fallback: true };
-    expect(outputPorts({ type: "flow.switch", config }, switchType)).toEqual(["high", "low", "default"]);
-    expect(outputPorts({ type: "flow.switch", config: { ...config, fallback: false } }, switchType)).toEqual(["high", "low"]);
-    expect(outputPorts({ type: "flow.if", config: {} }, type({ ports: ["true", "false"] }))).toEqual(["true", "false"]);
+    expect(outputPorts({ type: "flow.switch", config }, switchType)).toEqual([
+      "high",
+      "low",
+      "default",
+    ]);
+    expect(
+      outputPorts({ type: "flow.switch", config: { ...config, fallback: false } }, switchType),
+    ).toEqual(["high", "low"]);
+    expect(
+      outputPorts({ type: "flow.if", config: {} }, type({ ports: ["true", "false"] })),
+    ).toEqual(["true", "false"]);
   });
 
   it("makes readable unique ids and names", () => {

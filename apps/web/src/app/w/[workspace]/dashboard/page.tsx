@@ -48,15 +48,20 @@ function Kpi({
   tone?: "danger";
 }) {
   const body = (
-    <Card className={cn("h-full px-5 py-4", href && "transition-colors hover:border-input")}>
-      <div className="flex items-center gap-2 text-[12.5px] font-medium text-muted-foreground [&_svg]:size-4 [&_svg]:text-primary">
+    <Card className={cn("h-full px-5 py-4", href && "hover:border-input transition-colors")}>
+      <div className="text-muted-foreground [&_svg]:text-primary flex items-center gap-2 text-[12.5px] font-medium [&_svg]:size-4">
         {icon}
         {label}
       </div>
-      <p className={cn("mt-2 text-[26px] font-semibold tabular-nums tracking-tight", tone === "danger" && "text-danger")}>
+      <p
+        className={cn(
+          "mt-2 text-[26px] font-semibold tracking-tight tabular-nums",
+          tone === "danger" && "text-danger",
+        )}
+      >
         {value}
       </p>
-      <p className="mt-0.5 text-xs text-muted-foreground">{detail}</p>
+      <p className="text-muted-foreground mt-0.5 text-xs">{detail}</p>
     </Card>
   );
   return href ? (
@@ -81,7 +86,11 @@ export default function DashboardPage() {
         title="Dashboard"
         description="How your automations are doing, and what is happening right now."
         actions={
-          <div role="tablist" aria-label="Time window" className="flex rounded-lg border border-border bg-card p-0.5 shadow-sm">
+          <div
+            role="tablist"
+            aria-label="Time window"
+            className="border-border bg-card flex rounded-lg border p-0.5 shadow-sm"
+          >
             {WINDOWS.map((option) => (
               <button
                 key={option.value}
@@ -91,7 +100,9 @@ export default function DashboardPage() {
                 onClick={() => setWindow(option.value)}
                 className={cn(
                   "rounded-md px-2.5 py-1 text-[12.5px] font-medium transition-colors",
-                  window === option.value ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+                  window === option.value
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {option.label}
@@ -144,9 +155,11 @@ export default function DashboardPage() {
             <CardHeader>
               <div>
                 <CardTitle>Volume</CardTitle>
-                <CardDescription>Executions started per {window === "24h" ? "hour" : "day"} ({data.timezone})</CardDescription>
+                <CardDescription>
+                  Executions started per {window === "24h" ? "hour" : "day"} ({data.timezone})
+                </CardDescription>
               </div>
-              <div className="hidden flex-wrap gap-3 text-[12px] text-muted-foreground sm:flex">
+              <div className="text-muted-foreground hidden flex-wrap gap-3 text-[12px] sm:flex">
                 {[
                   ["Succeeded", "var(--chart-success)"],
                   ["Failed", "var(--chart-failed)"],
@@ -175,11 +188,13 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="pt-2">
                 {data.slowest.length === 0 ? (
-                  <p className="py-6 text-center text-[13px] text-muted-foreground">Not enough runs yet.</p>
+                  <p className="text-muted-foreground py-6 text-center text-[13px]">
+                    Not enough runs yet.
+                  </p>
                 ) : (
                   <table className="w-full text-[13px]">
                     <thead>
-                      <tr className="text-left text-[11.5px] uppercase tracking-wide text-subtle">
+                      <tr className="text-subtle text-left text-[11.5px] tracking-wide uppercase">
                         <th className="pb-2 font-medium">Workflow</th>
                         <th className="pb-2 text-right font-medium">Runs</th>
                         <th className="pb-2 text-right font-medium">p95</th>
@@ -188,15 +203,24 @@ export default function DashboardPage() {
                     </thead>
                     <tbody>
                       {data.slowest.map((row) => (
-                        <tr key={row.workflow_id} className="border-t border-border">
+                        <tr key={row.workflow_id} className="border-border border-t">
                           <td className="py-2 pr-2">
-                            <Link href={`${base}/workflows/${row.workflow_id}`} className="font-medium hover:text-primary">
+                            <Link
+                              href={`${base}/workflows/${row.workflow_id}`}
+                              className="hover:text-primary font-medium"
+                            >
                               {row.name}
                             </Link>
                           </td>
-                          <td className="py-2 text-right tabular-nums text-muted-foreground">{formatNumber(row.runs)}</td>
-                          <td className="py-2 text-right font-medium tabular-nums">{formatDuration(row.p95_ms)}</td>
-                          <td className="py-2 text-right tabular-nums text-muted-foreground">{formatDuration(row.avg_ms)}</td>
+                          <td className="text-muted-foreground py-2 text-right tabular-nums">
+                            {formatNumber(row.runs)}
+                          </td>
+                          <td className="py-2 text-right font-medium tabular-nums">
+                            {formatDuration(row.p95_ms)}
+                          </td>
+                          <td className="text-muted-foreground py-2 text-right tabular-nums">
+                            {formatDuration(row.avg_ms)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -214,20 +238,36 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="pt-2">
                 {data.recent_failures.length === 0 ? (
-                  <EmptyState icon={<Gauge />} title="No failures" description="Everything that ran in this window succeeded." className="py-6" />
+                  <EmptyState
+                    icon={<Gauge />}
+                    title="No failures"
+                    description="Everything that ran in this window succeeded."
+                    className="py-6"
+                  />
                 ) : (
-                  <ul className="divide-y divide-border">
+                  <ul className="divide-border divide-y">
                     {data.recent_failures.map((failure) => (
                       <li key={failure.execution_id}>
-                        <Link href={`${base}/executions/${failure.execution_id}`} className="flex items-start gap-3 py-2.5 hover:text-primary">
-                          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden />
+                        <Link
+                          href={`${base}/executions/${failure.execution_id}`}
+                          className="hover:text-primary flex items-start gap-3 py-2.5"
+                        >
+                          <TriangleAlert
+                            className="text-danger mt-0.5 size-4 shrink-0"
+                            aria-hidden
+                          />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[13px] font-medium">{failure.workflow_name}</span>
-                            <span className="block truncate text-[12px] text-muted-foreground">
-                              {failure.code ? <span className="font-mono">{failure.code}</span> : null} {failure.message}
+                            <span className="block truncate text-[13px] font-medium">
+                              {failure.workflow_name}
+                            </span>
+                            <span className="text-muted-foreground block truncate text-[12px]">
+                              {failure.code ? (
+                                <span className="font-mono">{failure.code}</span>
+                              ) : null}{" "}
+                              {failure.message}
                             </span>
                           </span>
-                          <span className="shrink-0 text-[12px] text-subtle">
+                          <span className="text-subtle shrink-0 text-[12px]">
                             {failure.finished_at ? formatRelative(failure.finished_at) : ""}
                           </span>
                         </Link>
@@ -254,9 +294,14 @@ export default function DashboardPage() {
                   ["Waiting", data.queue.steps_waiting],
                   ["Queued runs", data.queue.executions_queued],
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-lg border border-border bg-muted/50 px-3 py-2">
-                    <p className="text-[11.5px] text-muted-foreground">{label}</p>
-                    <p className="text-lg font-semibold tabular-nums">{formatNumber(Number(value))}</p>
+                  <div
+                    key={label}
+                    className="border-border bg-muted/50 rounded-lg border px-3 py-2"
+                  >
+                    <p className="text-muted-foreground text-[11.5px]">{label}</p>
+                    <p className="text-lg font-semibold tabular-nums">
+                      {formatNumber(Number(value))}
+                    </p>
                   </div>
                 ))}
               </CardContent>
@@ -266,24 +311,30 @@ export default function DashboardPage() {
               <CardHeader>
                 <div>
                   <CardTitle>Workers</CardTitle>
-                  <CardDescription>Processes claiming steps; one leads the scheduler</CardDescription>
+                  <CardDescription>
+                    Processes claiming steps; one leads the scheduler
+                  </CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="pt-2">
                 {data.workers.length === 0 ? (
-                  <p className="py-4 text-center text-[13px] text-muted-foreground">No worker has reported in.</p>
+                  <p className="text-muted-foreground py-4 text-center text-[13px]">
+                    No worker has reported in.
+                  </p>
                 ) : (
                   <ul className="space-y-2">
                     {data.workers.map((worker) => (
                       <li key={worker.id} className="flex items-center gap-2.5 text-[13px]">
-                        <Server className="size-4 text-muted-foreground" aria-hidden />
-                        <span className="min-w-0 flex-1 truncate font-mono text-[12px]">{worker.id}</span>
+                        <Server className="text-muted-foreground size-4" aria-hidden />
+                        <span className="min-w-0 flex-1 truncate font-mono text-[12px]">
+                          {worker.id}
+                        </span>
                         {worker.leader ? (
                           <Badge tone="primary">
                             <Crown aria-hidden /> Leader
                           </Badge>
                         ) : null}
-                        <span className="tabular-nums text-muted-foreground">
+                        <span className="text-muted-foreground tabular-nums">
                           {worker.busy}/{worker.concurrency}
                         </span>
                       </li>
@@ -302,20 +353,30 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="pt-2">
                 {data.upcoming.length === 0 ? (
-                  <p className="py-4 text-center text-[13px] text-muted-foreground">Nothing scheduled.</p>
+                  <p className="text-muted-foreground py-4 text-center text-[13px]">
+                    Nothing scheduled.
+                  </p>
                 ) : (
                   <ul className="space-y-2">
                     {data.upcoming.map((run) => (
-                      <li key={`${run.workflow_id}-${run.node_id}`} className="flex items-center gap-2.5 text-[13px]">
+                      <li
+                        key={`${run.workflow_id}-${run.node_id}`}
+                        className="flex items-center gap-2.5 text-[13px]"
+                      >
                         {run.kind === "cron" ? (
-                          <CalendarClock className="size-4 text-muted-foreground" aria-hidden />
+                          <CalendarClock className="text-muted-foreground size-4" aria-hidden />
                         ) : (
-                          <WorkflowIcon className="size-4 text-muted-foreground" aria-hidden />
+                          <WorkflowIcon className="text-muted-foreground size-4" aria-hidden />
                         )}
-                        <Link href={`${base}/workflows/${run.workflow_id}`} className="min-w-0 flex-1 truncate hover:text-primary">
+                        <Link
+                          href={`${base}/workflows/${run.workflow_id}`}
+                          className="hover:text-primary min-w-0 flex-1 truncate"
+                        >
                           {run.workflow_name}
                         </Link>
-                        <span className="shrink-0 text-[12px] text-subtle">{formatRelative(run.next_fire_at)}</span>
+                        <span className="text-subtle shrink-0 text-[12px]">
+                          {formatRelative(run.next_fire_at)}
+                        </span>
                       </li>
                     ))}
                   </ul>

@@ -29,22 +29,36 @@ export default function WelcomePage() {
       <Wordmark name={runtimeEnv().productName} />
       <Card className="w-full max-w-md p-6">
         <div className="mb-5 flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+          <span className="bg-accent text-accent-foreground flex size-10 items-center justify-center rounded-xl">
             <FolderPlus className="size-5" />
           </span>
           <div>
             <h1 className="text-lg font-semibold tracking-tight">Create a workspace</h1>
-            <p className="text-[13px] text-muted-foreground">A workspace holds workflows, credentials and the people who run them.</p>
+            <p className="text-muted-foreground text-[13px]">
+              A workspace holds workflows, credentials and the people who run them.
+            </p>
           </div>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="ws-name">Name</Label>
-            <Input id="ws-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Operations" required autoFocus />
+            <Input
+              id="ws-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Operations"
+              required
+              autoFocus
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="ws-description">Description</Label>
-            <Textarea id="ws-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What lives here?" />
+            <Textarea
+              id="ws-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What lives here?"
+            />
           </div>
           {create.error ? <ErrorNotice message={create.error.message} /> : null}
           <Button type="submit" className="w-full" disabled={!name.trim() || create.isPending}>

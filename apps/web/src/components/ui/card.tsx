@@ -5,14 +5,19 @@ import { cn } from "@/lib/cn";
 export function Card({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cn("rounded-xl border border-border bg-card text-card-foreground shadow-sm", className)}
+      className={cn(
+        "border-border bg-card text-card-foreground rounded-xl border shadow-sm",
+        className,
+      )}
       {...props}
     />
   );
 }
 
 export function CardHeader({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("flex items-start justify-between gap-4 px-5 pt-4", className)} {...props} />;
+  return (
+    <div className={cn("flex items-start justify-between gap-4 px-5 pt-4", className)} {...props} />
+  );
 }
 
 export function CardTitle({ className, ...props }: ComponentProps<"h3">) {
@@ -20,7 +25,7 @@ export function CardTitle({ className, ...props }: ComponentProps<"h3">) {
 }
 
 export function CardDescription({ className, ...props }: ComponentProps<"p">) {
-  return <p className={cn("mt-0.5 text-[13px] text-muted-foreground", className)} {...props} />;
+  return <p className={cn("text-muted-foreground mt-0.5 text-[13px]", className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }: ComponentProps<"div">) {

@@ -1,6 +1,14 @@
 "use client";
 
-import { Ban, ChevronRight, ExternalLink, MousePointerClick, Play, RotateCcw, StepForward } from "lucide-react";
+import {
+  Ban,
+  ChevronRight,
+  ExternalLink,
+  MousePointerClick,
+  Play,
+  RotateCcw,
+  StepForward,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -32,7 +40,15 @@ import {
 } from "@/lib/queries";
 import type { Execution } from "@/lib/types";
 
-function Actions({ workspace, execution, editable }: { workspace: string; execution: Execution; editable: boolean }) {
+function Actions({
+  workspace,
+  execution,
+  editable,
+}: {
+  workspace: string;
+  execution: Execution;
+  editable: boolean;
+}) {
   const router = useRouter();
   const actions = useExecutionActions(workspace, execution.id);
   const busy = actions.cancel.isPending || actions.resume.isPending || actions.retry.isPending;
@@ -50,7 +66,10 @@ function Actions({ workspace, execution, editable }: { workspace: string; execut
           disabled={busy}
           data-testid="cancel-execution"
           onClick={() =>
-            actions.cancel.mutate(undefined, { onSuccess: () => toast.success("Execution cancelled"), onError: fail })
+            actions.cancel.mutate(undefined, {
+              onSuccess: () => toast.success("Execution cancelled"),
+              onError: fail,
+            })
           }
         >
           <Ban /> Cancel
@@ -125,14 +144,20 @@ export default function ExecutionPage() {
     );
   }
 
-  const failedStep = execution.error?.step_id ?? steps.find((s) => s.status === "failed")?.id ?? null;
+  const failedStep =
+    execution.error?.step_id ?? steps.find((s) => s.status === "failed")?.id ?? null;
   const selectedId = selection === undefined ? failedStep : selection;
   const selected = steps.find((s) => s.id === selectedId) ?? null;
-  const failedNode = execution.error?.node_id ? steps.find((s) => s.node_id === execution.error?.node_id)?.node_name : null;
+  const failedNode = execution.error?.node_id
+    ? steps.find((s) => s.node_id === execution.error?.node_id)?.node_name
+    : null;
 
   return (
     <PageBody className="max-w-7xl">
-      <nav className="mb-2 flex items-center gap-1 text-[12.5px] text-muted-foreground" aria-label="Breadcrumb">
+      <nav
+        className="text-muted-foreground mb-2 flex items-center gap-1 text-[12.5px]"
+        aria-label="Breadcrumb"
+      >
         <Link href={`/w/${workspace}/executions`} className="hover:text-foreground">
           Executions
         </Link>
@@ -145,14 +170,29 @@ export default function ExecutionPage() {
             {execution.workflow_name || "Deleted workflow"}
             <StatusBadge status={execution.status} className="text-[12px]" />
           </h1>
-          <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
+          <p className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
             <TriggerLabel kind={execution.trigger_kind} />
-            <span>{execution.version_number ? `Version ${execution.version_number}` : "Draft test run"}</span>
-            <span title={execution.created_at}>Started {formatDateTime(execution.started_at ?? execution.created_at)}</span>
-            <span>{live ? "Running for" : "Took"} {formatDuration(execution.duration_ms ?? (query.dataUpdatedAt - Date.parse(execution.started_at ?? execution.created_at)))}</span>
-            {execution.resume_count ? <Badge tone="info">resumed {execution.resume_count}x</Badge> : null}
+            <span>
+              {execution.version_number ? `Version ${execution.version_number}` : "Draft test run"}
+            </span>
+            <span title={execution.created_at}>
+              Started {formatDateTime(execution.started_at ?? execution.created_at)}
+            </span>
+            <span>
+              {live ? "Running for" : "Took"}{" "}
+              {formatDuration(
+                execution.duration_ms ??
+                  query.dataUpdatedAt - Date.parse(execution.started_at ?? execution.created_at),
+              )}
+            </span>
+            {execution.resume_count ? (
+              <Badge tone="info">resumed {execution.resume_count}x</Badge>
+            ) : null}
             {execution.retry_of_id ? (
-              <Link href={`/w/${workspace}/executions/${execution.retry_of_id}`} className="text-primary hover:underline">
+              <Link
+                href={`/w/${workspace}/executions/${execution.retry_of_id}`}
+                className="text-primary hover:underline"
+              >
                 Retry of {shortId(execution.retry_of_id)}
               </Link>
             ) : null}
@@ -162,13 +202,18 @@ export default function ExecutionPage() {
       </header>
 
       {execution.error ? (
-        <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3" role="alert">
+        <div
+          className="border-danger/30 bg-danger-soft mb-5 flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3"
+          role="alert"
+        >
           <div className="min-w-0 flex-1 text-[13px]">
-            <p className="font-medium text-danger">
+            <p className="text-danger font-medium">
               {failedNode ? `Failed at ${failedNode}` : "Failed"}
-              <span className="ml-2 font-mono text-[11.5px] font-normal">{execution.error.code}</span>
+              <span className="ml-2 font-mono text-[11.5px] font-normal">
+                {execution.error.code}
+              </span>
             </p>
-            <p className="mt-0.5 text-foreground">{execution.error.message}</p>
+            <p className="text-foreground mt-0.5">{execution.error.message}</p>
           </div>
           {failedStep && selectedId !== failedStep ? (
             <Button variant="secondary" size="sm" onClick={() => setSelection(failedStep)}>
@@ -184,7 +229,9 @@ export default function ExecutionPage() {
             <CardHeader className="pb-3">
               <div>
                 <CardTitle>Graph</CardTitle>
-                <CardDescription>Click a node to see what it received and returned.</CardDescription>
+                <CardDescription>
+                  Click a node to see what it received and returned.
+                </CardDescription>
               </div>
             </CardHeader>
             {definition.data && types.data ? (
@@ -214,7 +261,12 @@ export default function ExecutionPage() {
                 </CardDescription>
               </div>
             </CardHeader>
-            <Timeline execution={execution} now={query.dataUpdatedAt} selectedStep={selectedId} onSelectStep={setSelection} />
+            <Timeline
+              execution={execution}
+              now={query.dataUpdatedAt}
+              selectedStep={selectedId}
+              onSelectStep={setSelection}
+            />
           </Card>
 
           <Card className="p-5">
@@ -223,13 +275,23 @@ export default function ExecutionPage() {
                 <TabsTrigger value="trigger">Trigger payload</TabsTrigger>
                 <TabsTrigger value="output">Output</TabsTrigger>
                 <TabsTrigger value="variables">Variables</TabsTrigger>
-                <TabsTrigger value="logs">Logs {logs.data ? `(${logs.data.items.length})` : ""}</TabsTrigger>
+                <TabsTrigger value="logs">
+                  Logs {logs.data ? `(${logs.data.items.length})` : ""}
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="trigger">
-                <JsonView value={execution.trigger_payload} label="Trigger payload" empty="The trigger sent no payload." />
+                <JsonView
+                  value={execution.trigger_payload}
+                  label="Trigger payload"
+                  empty="The trigger sent no payload."
+                />
               </TabsContent>
               <TabsContent value="output">
-                <JsonView value={execution.output} label="Execution output" empty={live ? "Not finished yet." : "No output."} />
+                <JsonView
+                  value={execution.output}
+                  label="Execution output"
+                  empty={live ? "Not finished yet." : "No output."}
+                />
               </TabsContent>
               <TabsContent value="variables">
                 <JsonView
@@ -239,7 +301,11 @@ export default function ExecutionPage() {
                 />
               </TabsContent>
               <TabsContent value="logs">
-                {logs.data ? <LogList lines={logs.data.items} stepNames={stepNames} /> : <Skeleton className="h-40" />}
+                {logs.data ? (
+                  <LogList lines={logs.data.items} stepNames={stepNames} />
+                ) : (
+                  <Skeleton className="h-40" />
+                )}
               </TabsContent>
             </Tabs>
           </Card>

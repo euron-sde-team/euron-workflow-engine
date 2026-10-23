@@ -24,7 +24,13 @@ describe("schema helpers", () => {
   });
 
   it("builds the starting config of a node", () => {
-    expect(initialConfig(root)).toEqual({ method: "GET", url: "", timeout_s: 30, credential_id: null, conditions: [] });
+    expect(initialConfig(root)).toEqual({
+      method: "GET",
+      url: "",
+      timeout_s: 30,
+      credential_id: null,
+      conditions: [],
+    });
     expect(defaultFor({ type: "integer", minimum: 1 }, root)).toBe(1);
   });
 

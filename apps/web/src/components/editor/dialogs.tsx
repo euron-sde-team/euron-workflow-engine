@@ -44,14 +44,26 @@ function PublishForm({
     >
       <div className="space-y-1.5">
         <Label htmlFor="publish-note">What changed</Label>
-        <Input id="publish-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Retry the fulfillment API for longer" autoFocus />
+        <Input
+          id="publish-note"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Retry the fulfillment API for longer"
+          autoFocus
+        />
       </div>
-      <label className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-[13px]">
+      <label className="border-border flex items-center justify-between gap-3 rounded-lg border p-3 text-[13px]">
         <span>
           <span className="block font-medium">Active</span>
-          <span className="block text-xs text-muted-foreground">Webhooks, schedules and events start this version.</span>
+          <span className="text-muted-foreground block text-xs">
+            Webhooks, schedules and events start this version.
+          </span>
         </span>
-        <Switch checked={activate} onCheckedChange={setActivate} aria-label="Activate after publishing" />
+        <Switch
+          checked={activate}
+          onCheckedChange={setActivate}
+          aria-label="Activate after publishing"
+        />
       </label>
       {error ? <ErrorNotice message={error} /> : null}
       <DialogFooter>
@@ -93,15 +105,23 @@ export function PublishDialog({
       >
         {errors.length ? (
           <div className="space-y-2">
-            <ErrorNotice message={`Fix ${errors.length} problem${errors.length === 1 ? "" : "s"} first.`} />
-            <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-danger">
+            <ErrorNotice
+              message={`Fix ${errors.length} problem${errors.length === 1 ? "" : "s"} first.`}
+            />
+            <ul className="text-danger max-h-40 space-y-1 overflow-y-auto text-xs">
               {errors.slice(0, 8).map((issue, index) => (
                 <li key={index}>{issue.message}</li>
               ))}
             </ul>
           </div>
         ) : (
-          <PublishForm workflow={workflow} pending={pending} error={error} onCancel={() => onOpenChange(false)} onPublish={onPublish} />
+          <PublishForm
+            workflow={workflow}
+            pending={pending}
+            error={error}
+            onCancel={() => onOpenChange(false)}
+            onPublish={onPublish}
+          />
         )}
       </DialogContent>
     </Dialog>
@@ -126,7 +146,9 @@ function RunForm({
   onRun: (triggerId: string, payload: unknown) => void;
 }) {
   const [trigger, setTrigger] = useState(() => initialTrigger(triggers)?.id ?? "");
-  const [payload, setPayload] = useState(() => JSON.stringify(initialTrigger(triggers)?.config.sample_payload ?? {}, null, 2));
+  const [payload, setPayload] = useState(() =>
+    JSON.stringify(initialTrigger(triggers)?.config.sample_payload ?? {}, null, 2),
+  );
   const [parseError, setParseError] = useState<string | null>(null);
   return (
     <form
@@ -164,9 +186,16 @@ function RunForm({
       ) : null}
       <div className="space-y-1.5">
         <Label htmlFor="run-payload">Trigger payload</Label>
-        <Textarea id="run-payload" rows={8} className="font-mono text-[12px]" value={payload} onChange={(e) => setPayload(e.target.value)} spellCheck={false} />
+        <Textarea
+          id="run-payload"
+          rows={8}
+          className="font-mono text-[12px]"
+          value={payload}
+          onChange={(e) => setPayload(e.target.value)}
+          spellCheck={false}
+        />
         <FieldHint>Read in templates as trigger, for example {"{{ trigger.order_id }}"}.</FieldHint>
-        {parseError ? <p className="text-xs text-danger">JSON: {parseError}</p> : null}
+        {parseError ? <p className="text-danger text-xs">JSON: {parseError}</p> : null}
       </div>
       {error ? <ErrorNotice message={error} /> : null}
       <DialogFooter>
@@ -199,8 +228,17 @@ export function RunDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title="Run the draft" description="A test run uses the saved draft and is marked as a test in the history.">
-        <RunForm triggers={triggers} pending={pending} error={error} onCancel={() => onOpenChange(false)} onRun={onRun} />
+      <DialogContent
+        title="Run the draft"
+        description="A test run uses the saved draft and is marked as a test in the history."
+      >
+        <RunForm
+          triggers={triggers}
+          pending={pending}
+          error={error}
+          onCancel={() => onOpenChange(false)}
+          onRun={onRun}
+        />
       </DialogContent>
     </Dialog>
   );
@@ -231,7 +269,9 @@ function SettingsForm({
   const [name, setName] = useState(workflow.name);
   const [description, setDescription] = useState(workflow.description);
   const [tags, setTags] = useState(workflow.tags.join(", "));
-  const [limit, setLimit] = useState(workflow.concurrency_limit ? String(workflow.concurrency_limit) : "");
+  const [limit, setLimit] = useState(
+    workflow.concurrency_limit ? String(workflow.concurrency_limit) : "",
+  );
   const [timeout, setTimeoutValue] = useState(String(workflow.timeout_s));
   return (
     <form
@@ -241,7 +281,10 @@ function SettingsForm({
         onSave({
           name,
           description,
-          tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+          tags: tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
           concurrency_limit: limit ? Number(limit) : undefined,
           clear_concurrency_limit: !limit,
           timeout_s: Number(timeout) || 3600,
@@ -254,21 +297,46 @@ function SettingsForm({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="wf-description">Description</Label>
-        <Textarea id="wf-description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <Textarea
+          id="wf-description"
+          rows={3}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="wf-tags">Tags</Label>
-        <Input id="wf-tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="billing, nightly" />
+        <Input
+          id="wf-tags"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder="billing, nightly"
+        />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="wf-limit">Concurrency limit</Label>
-          <Input id="wf-limit" type="number" min={1} max={1000} value={limit} onChange={(e) => setLimit(e.target.value)} placeholder="Unlimited" />
+          <Input
+            id="wf-limit"
+            type="number"
+            min={1}
+            max={1000}
+            value={limit}
+            onChange={(e) => setLimit(e.target.value)}
+            placeholder="Unlimited"
+          />
           <FieldHint>Extra runs wait in the queue.</FieldHint>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="wf-timeout">Timeout (seconds)</Label>
-          <Input id="wf-timeout" type="number" min={10} max={604800} value={timeout} onChange={(e) => setTimeoutValue(e.target.value)} />
+          <Input
+            id="wf-timeout"
+            type="number"
+            min={10}
+            max={604800}
+            value={timeout}
+            onChange={(e) => setTimeoutValue(e.target.value)}
+          />
           <FieldHint>For the whole execution.</FieldHint>
         </div>
       </div>
@@ -303,7 +371,13 @@ export function SettingsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent title="Workflow settings">
-        <SettingsForm workflow={workflow} pending={pending} error={error} onCancel={() => onOpenChange(false)} onSave={onSave} />
+        <SettingsForm
+          workflow={workflow}
+          pending={pending}
+          error={error}
+          onCancel={() => onOpenChange(false)}
+          onSave={onSave}
+        />
       </DialogContent>
     </Dialog>
   );
@@ -329,26 +403,35 @@ export function VersionsDialog({
   const versions = useVersions(workspace, workflowId, open);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title="Versions" description="Every published version, newest first. Restoring copies it into the draft.">
+      <DialogContent
+        title="Versions"
+        description="Every published version, newest first. Restoring copies it into the draft."
+      >
         {versions.isLoading ? <Spinner /> : null}
         {versions.data?.length === 0 ? (
-          <p className="text-[13px] text-muted-foreground">Nothing published yet.</p>
+          <p className="text-muted-foreground text-[13px]">Nothing published yet.</p>
         ) : (
-          <ul className="max-h-80 divide-y divide-border overflow-y-auto">
+          <ul className="divide-border max-h-80 divide-y overflow-y-auto">
             {versions.data?.map((version) => (
               <li key={version.id} className="flex items-center gap-3 py-2.5">
-                <History className="size-4 text-muted-foreground" aria-hidden />
+                <History className="text-muted-foreground size-4" aria-hidden />
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-medium">
-                    Version {version.number} {version.is_current ? <Badge tone="primary">current</Badge> : null}
+                    Version {version.number}{" "}
+                    {version.is_current ? <Badge tone="primary">current</Badge> : null}
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="text-muted-foreground truncate text-xs">
                     {version.note || "No note"} &middot; {version.node_count} nodes &middot;{" "}
                     {formatRelative(version.created_at)}
                   </p>
                 </div>
                 {!readOnly ? (
-                  <Button variant="secondary" size="sm" disabled={pending} onClick={() => onRestore(version.number)}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={pending}
+                    onClick={() => onRestore(version.number)}
+                  >
                     <RotateCcw /> Restore
                   </Button>
                 ) : null}

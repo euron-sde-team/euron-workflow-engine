@@ -15,9 +15,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/format";
 import { useTestNode } from "@/lib/queries";
-import type { Credential, Issue, NodeSpec, NodeTestResult, NodeType, RetryPolicy } from "@/lib/types";
+import type {
+  Credential,
+  Issue,
+  NodeSpec,
+  NodeTestResult,
+  NodeType,
+  RetryPolicy,
+} from "@/lib/types";
 
-export type TestContext = { input: unknown; trigger: unknown; steps: Record<string, unknown>; vars: Record<string, unknown> };
+export type TestContext = {
+  input: unknown;
+  trigger: unknown;
+  steps: Record<string, unknown>;
+  vars: Record<string, unknown>;
+};
 
 function RetryEditor({
   policy,
@@ -34,11 +46,11 @@ function RetryEditor({
   const value = policy ?? defaults;
   const set = (patch: Partial<RetryPolicy>) => onChange({ ...value, ...patch });
   return (
-    <div className="space-y-3 rounded-lg border border-border p-3">
+    <div className="border-border space-y-3 rounded-lg border p-3">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[13px] font-medium">Retries</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {custom
               ? `Up to ${value.max_attempts} attempts, backoff from ${value.initial_delay_ms} ms`
               : `Node default: ${defaults.max_attempts} attempt${defaults.max_attempts === 1 ? "" : "s"}`}
@@ -48,7 +60,11 @@ function RetryEditor({
           aria-label="Custom retry policy"
           checked={custom}
           disabled={readOnly}
-          onCheckedChange={(checked) => onChange(checked ? { ...defaults, max_attempts: Math.max(3, defaults.max_attempts) } : null)}
+          onCheckedChange={(checked) =>
+            onChange(
+              checked ? { ...defaults, max_attempts: Math.max(3, defaults.max_attempts) } : null,
+            )
+          }
         />
       </div>
       {custom ? (
@@ -77,7 +93,11 @@ function RetryEditor({
           ))}
           <label className="col-span-2 flex items-center justify-between gap-3 text-[13px]">
             Jitter (spread retries out)
-            <Switch checked={value.jitter} disabled={readOnly} onCheckedChange={(jitter) => set({ jitter })} />
+            <Switch
+              checked={value.jitter}
+              disabled={readOnly}
+              onCheckedChange={(jitter) => set({ jitter })}
+            />
           </label>
         </div>
       ) : null}
@@ -122,7 +142,7 @@ function TestPanel({
   return (
     <div className="space-y-4">
       {nodeType.side_effects ? (
-        <div className="flex gap-2 rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
+        <div className="bg-warning-soft text-warning flex gap-2 rounded-lg px-3 py-2 text-xs">
           <TriangleAlert className="size-4 shrink-0" aria-hidden />
           This node acts on a real system: a test run really sends, writes or publishes.
         </div>
@@ -149,9 +169,10 @@ function TestPanel({
           onChange={(e) => setInput(e.target.value)}
         />
         <FieldHint>
-          From the latest run of the upstream node when there is one. Templates also see trigger, steps and vars.
+          From the latest run of the upstream node when there is one. Templates also see trigger,
+          steps and vars.
         </FieldHint>
-        {parseError ? <p className="text-xs text-danger">JSON: {parseError}</p> : null}
+        {parseError ? <p className="text-danger text-xs">JSON: {parseError}</p> : null}
       </div>
       <Button onClick={run} disabled={test.isPending} className="w-full" data-testid="test-node">
         {test.isPending ? <Spinner className="text-primary-foreground" /> : <FlaskConical />}
@@ -161,21 +182,28 @@ function TestPanel({
       {result ? (
         <div className="space-y-3" data-testid="test-result">
           <div className="flex items-center gap-2">
-            <Badge tone={result.status === "succeeded" ? "success" : "danger"}>{result.status}</Badge>
-            <span className="text-xs text-muted-foreground">{formatDuration(result.duration_ms)}</span>
+            <Badge tone={result.status === "succeeded" ? "success" : "danger"}>
+              {result.status}
+            </Badge>
+            <span className="text-muted-foreground text-xs">
+              {formatDuration(result.duration_ms)}
+            </span>
             {result.ports.length ? (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 output: <span className="font-mono">{result.ports.join(", ")}</span>
               </span>
             ) : null}
           </div>
           {result.error ? (
-            <div className="rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-xs text-danger">
-              <span className="font-mono font-medium">{result.error.code}</span>: {result.error.message}
+            <div className="border-danger/30 bg-danger-soft text-danger rounded-lg border px-3 py-2 text-xs">
+              <span className="font-mono font-medium">{result.error.code}</span>:{" "}
+              {result.error.message}
               {result.error.retryable ? " (would be retried)" : ""}
             </div>
           ) : null}
-          {result.status === "succeeded" ? <JsonView value={result.output} label="Output" empty="No output." /> : null}
+          {result.status === "succeeded" ? (
+            <JsonView value={result.output} label="Output" empty="No output." />
+          ) : null}
           {result.events.length ? (
             <div>
               <p className="mb-1 text-xs font-medium">Would publish</p>
@@ -183,9 +211,15 @@ function TestPanel({
             </div>
           ) : null}
           {result.logs.length ? (
-            <ul className="space-y-1 rounded-lg border border-border p-2 font-mono text-[11.5px]">
+            <ul className="border-border space-y-1 rounded-lg border p-2 font-mono text-[11.5px]">
               {result.logs.map((line, index) => (
-                <li key={index} className={cn(line.level === "warn" && "text-warning", line.level === "error" && "text-danger")}>
+                <li
+                  key={index}
+                  className={cn(
+                    line.level === "warn" && "text-warning",
+                    line.level === "error" && "text-danger",
+                  )}
+                >
                   {line.message}
                 </li>
               ))}
@@ -224,7 +258,8 @@ export function Inspector({
 }) {
   const fieldIssues = useMemo(() => {
     const map = new Map<string, string>();
-    for (const issue of issues) if (issue.severity === "error") map.set(issue.field ?? "", issue.message);
+    for (const issue of issues)
+      if (issue.severity === "error") map.set(issue.field ?? "", issue.message);
     return map;
   }, [issues]);
   const general = issues.filter((issue) => !issue.field || issue.field === "name");
@@ -239,7 +274,7 @@ export function Inspector({
 
   return (
     <div className="flex h-full flex-col" data-testid="inspector">
-      <div className="flex items-start gap-3 border-b border-border p-4">
+      <div className="border-border flex items-start gap-3 border-b p-4">
         <NodeIcon icon={nodeType.icon} category={nodeType.category} />
         <div className="min-w-0 flex-1">
           <Input
@@ -247,10 +282,10 @@ export function Inspector({
             value={node.name}
             disabled={readOnly}
             onChange={(e) => onChange({ ...node, name: e.target.value })}
-            className="h-8 border-transparent px-1.5 text-[14px] font-semibold shadow-none hover:border-input"
+            className="hover:border-input h-8 border-transparent px-1.5 text-[14px] font-semibold shadow-none"
           />
-          <p className="mt-0.5 px-1.5 text-xs text-muted-foreground">
-            {nodeType.name} <span className="font-mono text-subtle">steps.{node.id}</span>
+          <p className="text-muted-foreground mt-0.5 px-1.5 text-xs">
+            {nodeType.name} <span className="text-subtle font-mono">steps.{node.id}</span>
           </p>
         </div>
         <Button variant="ghost" size="icon-sm" aria-label="Close inspector" onClick={onClose}>
@@ -258,9 +293,12 @@ export function Inspector({
         </Button>
       </div>
       {general.length ? (
-        <div className="space-y-1 border-b border-border px-4 py-2">
+        <div className="border-border space-y-1 border-b px-4 py-2">
           {general.map((issue, index) => (
-            <p key={index} className={cn("text-xs", issue.severity === "error" ? "text-danger" : "text-warning")}>
+            <p
+              key={index}
+              className={cn("text-xs", issue.severity === "error" ? "text-danger" : "text-warning")}
+            >
               {issue.message}
             </p>
           ))}
@@ -274,7 +312,7 @@ export function Inspector({
         </TabsList>
         <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto px-4 pb-6">
           <TabsContent value="configure">
-            <p className="mb-4 text-[12.5px] text-muted-foreground">{nodeType.description}</p>
+            <p className="text-muted-foreground mb-4 text-[12.5px]">{nodeType.description}</p>
             <SchemaForm
               schema={nodeType.config_schema}
               value={node.config}
@@ -304,9 +342,16 @@ export function Inspector({
                     placeholder={String(nodeType.default_timeout_s)}
                     value={node.timeout_s ?? ""}
                     disabled={readOnly}
-                    onChange={(e) => onChange({ ...node, timeout_s: e.target.value ? Number(e.target.value) : null })}
+                    onChange={(e) =>
+                      onChange({
+                        ...node,
+                        timeout_s: e.target.value ? Number(e.target.value) : null,
+                      })
+                    }
                   />
-                  <FieldHint>An attempt that runs longer fails with a timeout and is retried.</FieldHint>
+                  <FieldHint>
+                    An attempt that runs longer fails with a timeout and is retried.
+                  </FieldHint>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="node-on-error">When it fails</Label>
@@ -314,7 +359,9 @@ export function Inspector({
                     id="node-on-error"
                     value={node.on_error ?? "fail"}
                     disabled={readOnly}
-                    onChange={(e) => onChange({ ...node, on_error: e.target.value as "fail" | "continue" })}
+                    onChange={(e) =>
+                      onChange({ ...node, on_error: e.target.value as "fail" | "continue" })
+                    }
                   >
                     <option value="fail">Fail the execution (after retries)</option>
                     <option value="continue">Continue with the error as output</option>
@@ -322,11 +369,13 @@ export function Inspector({
                 </div>
               </>
             ) : null}
-            <label className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-[13px]">
+            <label className="border-border flex items-center justify-between gap-3 rounded-lg border p-3 text-[13px]">
               <span>
                 <span className="block font-medium">Disabled</span>
-                <span className="block text-xs text-muted-foreground">
-                  {nodeType.is_trigger ? "The trigger stops listening." : "The input passes through unchanged."}
+                <span className="text-muted-foreground block text-xs">
+                  {nodeType.is_trigger
+                    ? "The trigger stops listening."
+                    : "The input passes through unchanged."}
                 </span>
               </span>
               <Switch
@@ -350,7 +399,12 @@ export function Inspector({
                 <Button variant="secondary" size="sm" onClick={onDuplicate}>
                   <Copy /> Duplicate
                 </Button>
-                <Button variant="ghost" size="sm" className="text-danger hover:text-danger" onClick={onDelete}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-danger hover:text-danger"
+                  onClick={onDelete}
+                >
                   <Trash2 /> Delete node
                 </Button>
               </div>
@@ -359,16 +413,22 @@ export function Inspector({
           {!nodeType.is_trigger ? (
             <TabsContent value="test">
               {readOnly ? (
-                <p className="text-[13px] text-muted-foreground">Testing needs the editor role.</p>
+                <p className="text-muted-foreground text-[13px]">Testing needs the editor role.</p>
               ) : (
-                <TestPanel key={node.id} workspace={workspace} node={node} nodeType={nodeType} context={testContext} />
+                <TestPanel
+                  key={node.id}
+                  workspace={workspace}
+                  node={node}
+                  nodeType={nodeType}
+                  context={testContext}
+                />
               )}
             </TabsContent>
           ) : null}
         </div>
       </Tabs>
       {nodeType.is_trigger && !readOnly ? (
-        <div className="border-t border-border p-3 text-xs text-muted-foreground">
+        <div className="border-border text-muted-foreground border-t p-3 text-xs">
           <Play className="mr-1 inline size-3.5" aria-hidden />
           Run the whole workflow from the toolbar to try this trigger with its sample payload.
         </div>

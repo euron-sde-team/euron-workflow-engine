@@ -14,7 +14,9 @@ export class ApiError extends Error {
   }
 }
 
-type Envelope = { error?: { code?: string; message?: string; request_id?: string; details?: unknown } };
+type Envelope = {
+  error?: { code?: string; message?: string; request_id?: string; details?: unknown };
+};
 
 export function errorFrom(status: number, body: unknown): ApiError {
   const error = (body as Envelope | null)?.error;

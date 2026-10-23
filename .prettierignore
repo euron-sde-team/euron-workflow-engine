@@ -7,3 +7,5 @@ apps/api/
 docs/api/openapi.json
 e2e/.qa/
 e2e/.capture/
+# Prose and READMEs are wrapped by hand; their HTML blocks must stay exactly as written.
+*.md

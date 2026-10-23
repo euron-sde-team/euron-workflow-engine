@@ -24,7 +24,7 @@ import type { WorkspaceSummary } from "@/lib/types";
 export function WorkspaceAvatar({ name, className = "" }: { name: string; className?: string }) {
   return (
     <span
-      className={`flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary text-[11px] font-semibold text-primary-foreground ${className}`}
+      className={`bg-primary text-primary-foreground flex size-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold ${className}`}
       aria-hidden
     >
       {initials(name)}
@@ -32,7 +32,13 @@ export function WorkspaceAvatar({ name, className = "" }: { name: string; classN
   );
 }
 
-export function WorkspaceSwitcher({ current, all }: { current: WorkspaceSummary; all: WorkspaceSummary[] }) {
+export function WorkspaceSwitcher({
+  current,
+  all,
+}: {
+  current: WorkspaceSummary;
+  all: WorkspaceSummary[];
+}) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
 
@@ -42,21 +48,28 @@ export function WorkspaceSwitcher({ current, all }: { current: WorkspaceSummary;
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted"
+            className="hover:bg-muted flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors"
             aria-label="Switch workspace"
           >
             <WorkspaceAvatar name={current.name} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13.5px] font-semibold leading-tight">{current.name}</span>
-              <span className="block text-[11.5px] capitalize text-muted-foreground">{current.role}</span>
+              <span className="block truncate text-[13.5px] leading-tight font-semibold">
+                {current.name}
+              </span>
+              <span className="text-muted-foreground block text-[11.5px] capitalize">
+                {current.role}
+              </span>
             </span>
-            <ChevronsUpDown className="size-4 text-subtle" />
+            <ChevronsUpDown className="text-subtle size-4" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
           {all.map((workspace) => (
-            <DropdownMenuItem key={workspace.id} onSelect={() => router.push(`/w/${workspace.slug}/dashboard`)}>
+            <DropdownMenuItem
+              key={workspace.id}
+              onSelect={() => router.push(`/w/${workspace.slug}/dashboard`)}
+            >
               <WorkspaceAvatar name={workspace.name} className="size-6 text-[10px]" />
               <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
               {workspace.id === current.id ? <Check className="!text-primary" /> : null}
@@ -78,7 +91,13 @@ export function WorkspaceSwitcher({ current, all }: { current: WorkspaceSummary;
   );
 }
 
-function CreateWorkspaceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+function CreateWorkspaceDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const router = useRouter();
   const create = useCreateWorkspace();
   const [name, setName] = useState("");
@@ -95,15 +114,28 @@ function CreateWorkspaceDialog({ open, onOpenChange }: { open: boolean; onOpenCh
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title="Create a workspace" description="Workspaces keep workflows, credentials and history separate.">
+      <DialogContent
+        title="Create a workspace"
+        description="Workspaces keep workflows, credentials and history separate."
+      >
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="new-ws-name">Name</Label>
-            <Input id="new-ws-name" value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
+            <Input
+              id="new-ws-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoFocus
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="new-ws-description">Description</Label>
-            <Textarea id="new-ws-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Textarea
+              id="new-ws-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
           {create.error ? <ErrorNotice message={create.error.message} /> : null}
           <DialogFooter>
