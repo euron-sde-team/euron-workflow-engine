@@ -79,14 +79,16 @@ async def run(settings: Settings, *, scheduler_enabled: bool | None = None) -> N
         log.info("worker_stopped", worker=wid)
 
 
-def main() -> None:
+def main(*, scheduler_enabled: bool | None = None) -> None:
+    """Entry point for `wfe worker` and `python -m workflow_engine.worker`."""
     settings = get_settings()
     configure_logging(settings.log_level, settings.log_format)
     if settings.is_production and (problems := settings.production_problems()):
         raise SystemExit("Refusing to start in production:\n  - " + "\n  - ".join(problems))
     if settings.worker_metrics_port:
+        # Prometheus scrapes it, and container health checks read it.
         start_http_server(settings.worker_metrics_port)
-    asyncio.run(run(settings))
+    asyncio.run(run(settings, scheduler_enabled=scheduler_enabled))
 
 
 if __name__ == "__main__":

@@ -72,15 +72,17 @@ def create_user(
 @app.command()
 def worker(
     scheduler: Annotated[
-        bool, typer.Option(help="Also take part in the scheduler leader election.")
-    ] = True,
+        bool | None,
+        typer.Option(
+            "--scheduler/--no-scheduler",
+            help="Take part in the scheduler leader election (default: SCHEDULER_ENABLED).",
+        ),
+    ] = None,
 ) -> None:
     """Run a worker: claim and execute steps (and schedule, when elected)."""
-    from workflow_engine.worker import run
+    from workflow_engine.worker import main
 
-    settings = get_settings()
-    configure_logging(settings.log_level, settings.log_format)
-    asyncio.run(run(settings, scheduler_enabled=scheduler))
+    main(scheduler_enabled=scheduler)
 
 
 @app.command("demo-apis")
