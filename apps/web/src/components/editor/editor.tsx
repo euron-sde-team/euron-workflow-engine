@@ -657,7 +657,7 @@ function EditorCanvas({
             nodesConnectable={!readOnly}
             deleteKeyCode={readOnly ? null : ["Backspace", "Delete"]}
             fitView
-            fitViewOptions={{ padding: 0.25, maxZoom: 1.1 }}
+            fitViewOptions={{ padding: 0.1, maxZoom: 1.1 }}
             minZoom={0.2}
             proOptions={{ hideAttribution: true }}
             defaultEdgeOptions={{ type: "smoothstep" }}
