@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { WORKSPACE, apiGet, sendShopOrder, signIn } from "../helpers";
+import { WORKSPACE, apiGet, sendShopOrder, signIn, toast } from "../helpers";
 
 test("a signed webhook runs the order workflow, retries the busy API and archives the order", async ({
   page,
@@ -42,7 +42,7 @@ test("a waiting execution can be cancelled", async ({ page }) => {
   const title = page.getByRole("heading", { level: 1 });
   await expect(title).toContainText("Waiting");
   await page.getByTestId("cancel-execution").click();
-  await expect(page.getByText("Execution cancelled")).toBeVisible();
+  await expect(toast(page, "Execution cancelled")).toBeVisible();
   await expect(title).toContainText("Cancelled");
 });
 
@@ -62,10 +62,17 @@ test("the executions list filters by status and opens a failed run at the failin
 test("a dead letter resumes its execution from the failed step", async ({ page }) => {
   await signIn(page, "owner");
   await page.goto(`/w/${WORKSPACE}/dead-letters`);
-  const letters = page.getByTestId("dead-letter");
-  await expect(letters.first()).toBeVisible();
-  const before = await letters.count();
-  await page.getByTestId("retry-dead-letter").first().click();
-  await expect(page.getByText("Resumed from the failed step")).toBeVisible();
-  await expect(letters).toHaveCount(before - 1);
+  const first = page.getByTestId("dead-letter").first();
+  await expect(first).toBeVisible();
+  // The short execution id links the letter to its run.
+  const execution = (await first.getByRole("link").first().textContent())?.trim() ?? "";
+  expect(execution).not.toBe("");
+  await first.getByTestId("retry-dead-letter").click();
+  await expect(toast(page, "Resumed from the failed step")).toBeVisible();
+
+  // The letter moves to the retried list. (A run that fails again files a new letter.)
+  await page.getByRole("tab", { name: "Retried" }).click();
+  await expect(
+    page.getByRole("tabpanel").getByTestId("dead-letter").filter({ hasText: execution }).first(),
+  ).toBeVisible();
 });
