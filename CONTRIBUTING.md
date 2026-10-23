@@ -53,7 +53,8 @@ state between Postgres and those functions.
 **Every queue write is guarded.** A worker may only change a step it holds:
 `WHERE id = :id AND locked_by = :worker AND status = 'running'`, and a write that matches no
 row means the claim was lost. Read [ADR-0002](docs/architecture/adr/0002-postgres-as-the-queue.md)
-before changing anything in `repositories/steps.py` or `services/engine.py`.
+before changing anything in `repositories/executions.py`, `services/steps.py` or
+`services/engine.py`.
 
 **A new node type** is one module in `apps/api/src/workflow_engine/nodes/`: a Pydantic
 config model (it becomes the editor's form and the validation rules), a `run` coroutine and
