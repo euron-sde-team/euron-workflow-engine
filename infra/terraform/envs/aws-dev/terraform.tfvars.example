@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars and fill in. Never commit terraform.tfvars.
+name_prefix     = "wfe-dev"
+domain          = "wfe.example.com"
+route53_zone_id = "Z0000000000000000000"
+alarm_email     = "oncall@example.com"
+
+# The email node sends from this SES identity. A domain is verified through the DKIM
+# records Terraform publishes in the zone above; an address through the link SES mails.
+mail_identity = "wfe.example.com"
+mail_from     = "Automations <automations@wfe.example.com>"
+
+# Queues workflows may publish to, created as <name_prefix>-<name>.
+# workflow_queues = ["events", "orders.fifo"]
