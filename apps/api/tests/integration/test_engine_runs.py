@@ -70,6 +70,17 @@ async def test_a_linear_workflow_runs_to_completion(
     shape = await step_detail(client, owner, execution["id"], grouped["shape"][0]["id"])
     assert shape["input"]["order"]["id"] == "SO-1042"
     assert shape["output"] == {"id": "SO-1042", "big": True}
+    ran = await client.get(
+        f"{base(owner)}/executions/{execution['id']}/definition", headers=owner.headers
+    )
+    assert ran.status_code == 200, ran.text
+    assert ran.json()["version_number"] is None
+    assert [n["id"] for n in ran.json()["definition"]["nodes"]] == [
+        "start",
+        "shape",
+        "remember",
+        "summary",
+    ]
 
 
 async def test_branches_skip_and_merges_wait_for_what_ran(

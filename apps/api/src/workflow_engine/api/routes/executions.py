@@ -13,6 +13,7 @@ from workflow_engine.api.presenters import execution_detail, execution_summary, 
 from workflow_engine.repositories.executions import ExecutionFilters
 from workflow_engine.schemas.common import CursorPage
 from workflow_engine.schemas.executions import (
+    ExecutionDefinitionOut,
     ExecutionOut,
     ExecutionSummaryOut,
     LogOut,
@@ -60,6 +61,16 @@ async def get_execution(
     execution_id: uuid.UUID, ctx: ViewerDep, container: ContainerDep, session: SessionDep
 ) -> ExecutionOut:
     return execution_detail(await ExecutionService(container, session).detail(ctx.id, execution_id))
+
+
+@router.get("/{execution_id}/definition", summary="The workflow definition this execution ran")
+async def get_execution_definition(
+    execution_id: uuid.UUID, ctx: ViewerDep, container: ContainerDep, session: SessionDep
+) -> ExecutionDefinitionOut:
+    version = await ExecutionService(container, session).version(ctx.id, execution_id)
+    return ExecutionDefinitionOut(
+        version_id=version.id, version_number=version.number, definition=version.definition
+    )
 
 
 @router.get("/{execution_id}/steps/{step_id}", summary="One step with its input and output")

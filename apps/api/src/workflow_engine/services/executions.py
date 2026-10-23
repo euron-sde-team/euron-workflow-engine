@@ -310,6 +310,16 @@ class ExecutionService:
             truncated=len(steps) > MAX_STEPS_IN_DETAIL,
         )
 
+    async def version(self, workspace_id: uuid.UUID, execution_id: uuid.UUID) -> WorkflowVersion:
+        """The exact version an execution ran, draft snapshots included."""
+        execution = await self.executions.get(workspace_id, execution_id)
+        if execution is None:
+            raise NotFoundError("Execution not found.")
+        version = await VersionRepository(self.session).get(workspace_id, execution.version_id)
+        if version is None:
+            raise NotFoundError("The version this execution ran is missing.")
+        return version
+
     async def step(
         self, workspace_id: uuid.UUID, execution_id: uuid.UUID, step_id: uuid.UUID
     ) -> ExecutionStep:

@@ -67,6 +67,12 @@ class ExecutionOut(ExecutionSummaryOut):
     steps_truncated: bool = False
 
 
+class ExecutionDefinitionOut(ApiModel):
+    version_id: uuid.UUID
+    version_number: int | None = Field(description="None for a test run of a draft.")
+    definition: dict[str, Any]
+
+
 class LogOut(ApiModel):
     id: int
     step_id: uuid.UUID | None
