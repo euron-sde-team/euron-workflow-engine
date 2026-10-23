@@ -31,7 +31,9 @@ start over: `make down && make up && make demo`.
 HTTPS end to end from the browser's point of view; on plain HTTP set it to `false` (never in
 production).
 
-**"Too many requests" on sign-in.** Ten attempts a minute per address. Wait a minute.
+**"Too many requests" or "Too many failed sign-ins".** Ten attempts a minute are allowed per
+address, and eight wrong passwords in a row lock the account for 15 minutes. Wait, then sign
+in with the right password.
 
 ## Workflows and runs
 

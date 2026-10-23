@@ -28,6 +28,7 @@ the [ADRs](adr/README.md). To report a vulnerability, see [SECURITY.md](../../SE
 | CORS | Explicit origins only; production refuses `*` |
 | API keys | `wfk_<prefix>_<secret>`: only an HMAC-SHA256 of the secret, keyed with `API_KEY_PEPPER`, is stored; shown once at creation; role `viewer` or `editor` in one workspace; optional expiry; revocable; last use recorded |
 | Sign-in throttling | 10 attempts a minute per client address (`RATE_LIMIT_LOGIN`), counted in Valkey so every API replica shares the budget |
+| Account lockout | Eight failed sign-ins in a row lock the account for 15 minutes; a successful sign-in resets the count |
 
 Production refuses to start when `SESSION_SECRET` or `API_KEY_PEPPER` is the development
 default, shorter than 32 characters, or equal to the other.

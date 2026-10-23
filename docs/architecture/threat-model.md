@@ -76,7 +76,7 @@ flowchart LR
 
 | Threat | Mitigation | Residual |
 | --- | --- | --- |
-| Password guessing | Argon2id (64 MiB); 10 attempts a minute per address, shared across replicas in Valkey; equal timing for unknown accounts | No per-account lockout and no second factor (open). Put the app behind SSO or a VPN for high-value deployments. |
+| Password guessing | Argon2id (64 MiB); 10 attempts a minute per address, shared across replicas in Valkey; eight failures in a row lock the account for 15 minutes; equal timing for unknown accounts | No second factor (open): put the app behind SSO or a VPN for high-value deployments. The lockout can be triggered on purpose to keep a user out for 15 minutes (accepted). |
 | Stolen session cookie | `httpOnly`, `Secure`, `SameSite=Lax`; 7-day lifetime; sign-out denylists the token; password change and "sign out everywhere" invalidate all tokens | A stolen cookie works until it expires or the user signs out everywhere (accepted). |
 | Cross-site request with the victim's cookie | Origin check on every unsafe method with a cookie session; explicit CORS origins | None identified. |
 | Forged session JWT | HS256 with a generated 64-character secret; production refuses default, short or shared secrets; issuer and audience checked | Anyone holding `SESSION_SECRET` can mint sessions (see rank 2). |

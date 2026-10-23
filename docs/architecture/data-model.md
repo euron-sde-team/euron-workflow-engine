@@ -57,7 +57,7 @@ erDiagram
 | Table | Columns | Notes |
 | ----- | ------- | ----- |
 | `users` | `id`, `email` (citext, unique), `name`, `password_hash` (Argon2id), `is_admin`, `session_version`, `failed_logins`, `locked_until`, `last_login_at`, `created_at`, `updated_at` | Bumping `session_version` signs a user out everywhere |
-| `workspaces` | `id`, `slug` (unique), `name`, `description`, `settings` (jsonb), `created_by`, `created_at`, `updated_at` | `settings`: `timezone`, `retention_days`, `default_timeout_s`, `email_from_name` |
+| `workspaces` | `id`, `slug` (unique), `name`, `description`, `settings` (jsonb), `created_by`, `created_at`, `updated_at` | `settings`: `timezone`, `retention_days`, `default_timeout_s` |
 | `memberships` | `workspace_id`, `user_id` (composite PK), `role` (`owner`, `editor`, `viewer`), `created_at` | |
 | `api_keys` | `id`, `workspace_id`, `created_by`, `name`, `prefix` (unique), `secret_hash`, `role` (`editor`, `viewer`), `last_used_at`, `expires_at`, `revoked_at`, `created_at` | Key format `wfk_<prefix>_<secret>`; only an HMAC of the secret is stored |
 | `audit_events` | `id`, `workspace_id`, `actor_user_id`, `actor_api_key_id`, `action`, `target_type`, `target_id`, `details` (jsonb), `created_at` | Append-only (see [Triggers](#triggers)) |
@@ -141,20 +141,22 @@ erDiagram
 | `wfe:cancel` | pub/sub channel | n/a | Abort running steps of an execution |
 | `wfe:workers:<worker id>` | string (JSON) | 30 s, refreshed | Live workers for the dashboard |
 | `wfe:stats:queue` | string (JSON) | 30 s | Queue depth by state, written by the leader |
-| `wfe:dash:<workspace>:<window>` | string (JSON) | 15 s | Dashboard cache |
+| `wfe:dash:<workspace>:<window>:<timezone>` | string (JSON) | 15 s | Dashboard cache |
 | `rl:<bucket>:<key>:<window>` | counter | window | Rate limits |
 | `session:revoked:<jti>` | string | token lifetime | Signed-out sessions |
-| `apikey:touched:<id>` | string | 60 s | Throttles `last_used_at` writes |
+| `apikey:touched:<id>` | string | 60 s | Throttles `last_used_at` writes of API keys |
+| `cred:touched:<id>` | string | 60 s | Throttles `last_used_at` writes of credentials |
 
 ## Retention
 
-The scheduler leader deletes executions (with their steps and logs, by cascade) that
-finished more than the workspace's `retention_days` ago (30 by default), 500 at a time.
-Dead letters, events and audit events are kept; events older than the same window are
-pruned with them.
+The scheduler leader deletes executions that finished more than the workspace's
+`retention_days` ago (30 by default), in batches of 500; their steps, logs and dead letters
+go with them by cascade. Events older than the same window are pruned too. The audit log is
+kept.
 
 ## Migration policy
 
-Forward-only Alembic revisions. Migrations run once, before the API and workers start, in
-the `migrate` one-shot (compose) or ECS task (AWS), under a Postgres advisory lock so
-concurrent starts are safe. Never edit an applied revision; add a new one.
+Forward-only Alembic revisions, run under a Postgres advisory lock so concurrent starts are
+safe: by the `migrate` one-shot before anything else starts (compose), when an API task boots
+with `MIGRATE_ON_BOOT=true` (AWS), or on demand with `wfe migrate` (`make aws-migrate`). Never
+edit an applied revision; add a new one.
