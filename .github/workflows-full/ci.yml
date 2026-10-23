@@ -1,0 +1,73 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: "api: lint, typecheck, unit tests, OpenAPI"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest tests/unit -q
+      - name: OpenAPI reference matches the routes
+        run: uv run wfe openapi --out ../../docs/api/openapi.json --check
+
+  web:
+    name: "web: lint, typecheck, unit tests, build"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm format:check
+      - run: pnpm test
+      - run: pnpm build
+      - name: Sanitization scan
+        run: scripts/check-sanitization.sh
+
+  integration:
+    name: integration tests (Postgres, Valkey, Floci, Mailpit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - run: uv sync --frozen
+        working-directory: apps/api
+      # The same disposable services as `make test-integration`, on the same ports.
+      - run: scripts/test-deps.sh up
+      - run: uv run pytest tests/integration -q
+        working-directory: apps/api
+      - name: Service logs on failure
+        if: failure()
+        run: docker compose -p wfe-test logs --tail 200
