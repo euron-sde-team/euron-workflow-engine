@@ -1,0 +1,113 @@
+[project]
+name = "workflow-engine"
+version = "0.1.0"
+description = "Euron WorkflowEngine API, workers and scheduler: self-hosted workflow automation."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "ENGAGESPHERE TECHNOLOGY PRIVATE LIMITED" }]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi>=0.161,<0.200",
+  "uvicorn[standard]>=0.54",
+  "pydantic>=2.14,<3",
+  "pydantic-settings>=2.16,<3",
+  "email-validator>=2.3",
+  "sqlalchemy[asyncio]>=2.1.6,<2.2",
+  "asyncpg>=0.32",
+  "alembic>=1.20",
+  "redis>=8.1",
+  "httpx>=0.28.1",
+  "httpcore>=1.0.9",
+  "structlog>=26.1",
+  "orjson>=3.13",
+  "prometheus-client>=0.26",
+  "boto3>=1.43",
+  "argon2-cffi>=25.1",
+  "pyjwt>=2.15",
+  "typer>=0.27",
+  "jmespath>=1.0.1",
+  "cryptography>=46",
+  "tzdata>=2025.2",
+]
+
+[project.scripts]
+wfe = "workflow_engine.cli:app"
+
+[dependency-groups]
+dev = [
+  "pytest>=9.1",
+  "pytest-asyncio>=1.4",
+  "pytest-cov>=7.1",
+  "respx>=0.23",
+  "fakeredis>=2.40",
+  "hypothesis>=6.170",
+  "ruff>=0.17",
+  "mypy>=2.4",
+  "boto3-stubs[s3,sqs,sesv2,kms]>=1.43",
+  "types-jmespath",
+  "asyncpg-stubs",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/workflow_engine"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "S", "SIM", "C4", "RUF", "ASYNC", "PT", "RET", "PIE", "PERF", "TID"]
+ignore = [
+  "S311",   # random is used for retry jitter, never for secrets
+  "RUF012", # SQLAlchemy and Pydantic class attributes are not mutable defaults
+  "B008",   # FastAPI dependencies are declared as default arguments by design
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "S108", "PLR2004"]
+"src/workflow_engine/migrations/**" = ["E501"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+packages = ["workflow_engine"]
+warn_unreachable = true
+
+# Alembic revisions are frozen history written against SQLAlchemy's untyped op API.
+[[tool.mypy.overrides]]
+module = ["workflow_engine.migrations.*"]
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+addopts = "-ra --strict-markers"
+markers = [
+  "integration: needs Postgres, Redis, the AWS emulator and Mailpit (make test-integration)",
+]
+filterwarnings = ["ignore::DeprecationWarning:botocore.*"]
+
+[tool.coverage.run]
+source = ["workflow_engine"]
+branch = true
+omit = ["src/workflow_engine/migrations/*"]
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "@overload"]
