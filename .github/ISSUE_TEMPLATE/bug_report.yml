@@ -1,0 +1,47 @@
+name: Bug report
+description: Something does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. **Security issues: do not file here**, follow SECURITY.md instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: An exported workflow (Export JSON in the editor) helps a lot. Remove any secrets first.
+      placeholder: |
+        1. make up && make demo
+        2. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Editor, Triggers (webhook, schedule, event), A node, Executions and retries, Credentials, Dashboard, API, Deployment]
+  - type: dropdown
+    id: env
+    attributes:
+      label: Environment
+      options: [Local (Floci), Local against AWS, AWS (Terraform), Self-hosted (other), Other]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Redact keys, tokens, hostnames and payload contents before pasting.
+      render: text
