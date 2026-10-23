@@ -1,0 +1,26 @@
+{
+  "name": "euron-workflow-engine",
+  "private": true,
+  "description": "Euron WorkflowEngine: self-hosted workflow automation with durable executions.",
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @wfe/web dev",
+    "lint": "pnpm -r --parallel lint",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "pnpm --filter @wfe/web test",
+    "build": "pnpm --filter @wfe/web build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "e2e": "pnpm --filter @wfe/e2e test",
+    "qa": "pnpm --filter @wfe/e2e qa",
+    "capture": "pnpm --filter @wfe/e2e capture"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10",
+    "prettier-plugin-tailwindcss": "0.8.1"
+  }
+}

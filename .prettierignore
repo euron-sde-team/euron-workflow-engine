@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+**/.next/
+**/node_modules/
+**/playwright-report/
+**/test-results/
+apps/api/
+docs/api/openapi.json
+e2e/.qa/
+e2e/.capture/
