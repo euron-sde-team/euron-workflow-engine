@@ -1,0 +1,80 @@
+# Fast checks run on this repository: lint, typecheck and unit tests for the API and the
+# web app, Terraform formatting and validation, and the sanitization scan. The full
+# pipeline (integration tests on Postgres, Valkey, Floci and Mailpit, image builds, browser
+# tests, security scans) lives in .github/workflows-full/: enable it in your fork.
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: "api: lint, typecheck, unit tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest tests/unit -q
+
+  web:
+    name: "web: lint, typecheck, unit tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm format:check
+      - run: pnpm test
+
+  terraform:
+    name: "terraform: fmt, validate"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.6
+      - run: terraform fmt -check -recursive infra/terraform
+      - name: validate every environment
+        run: |
+          for env in local-floci aws-dev aws-prod; do
+            echo "== $env"
+            terraform -chdir=infra/terraform/envs/$env init -backend=false -input=false -no-color >/dev/null
+            terraform -chdir=infra/terraform/envs/$env validate -no-color
+          done
+
+  sanitize:
+    name: sanitization scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/check-sanitization.sh
